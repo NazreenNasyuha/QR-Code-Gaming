@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<!--
+  QR Cartridge Arcade — 6-Game Offline PWA Studio & Handheld
+  Copyright (c) 2026 NazreenNasyuha
+  Licensed under the MIT License (see LICENSE file for details).
+-->
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="author" content="NazreenNasyuha" />
+  <title>QR Cartridge Arcade — 6-Game Offline PWA Studio &amp; Handheld</title>
+
+  <!-- Tailwind CSS for responsive studio layout -->
+  <script src="https://cdn.tailwindcss.com" referrerpolicy="no-referrer"></script>
+
+  <!-- Typography: Inter (UI), JetBrains Mono (telemetry & code), Silkscreen (retro cartridge badges) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" referrerpolicy="no-referrer" />
+
+  <!-- QR Code Generator (Type 0 auto-version, exact module grid & ECC L/M) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular'],
+            pixel: ['Silkscreen', 'JetBrains Mono', 'monospace']
+          },
+          colors: {
+            studioBg: '#141622',
+            studioCard: '#1e2030',
+            studioDeep: '#11121c',
+            studioBorder: '#2e3148',
+            studioMuted: '#7f849c',
+            studioText: '#cdd6f4'
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-color: #141622;
+      color: #cdd6f4;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Subtle charcoal-slate studio backdrop with ambient pastel glow */
+    body {
+      background-image:
+        radial-gradient(circle at 10% 8%, rgba(166, 227, 161, 0.08), transparent 36%),
+        radial-gradient(circle at 90% 10%, rgba(137, 220, 235, 0.08), transparent 38%),
+        radial-gradient(circle at 50% 96%, rgba(203, 166, 247, 0.07), transparent 42%),
+        radial-gradient(rgba(127, 132, 156, 0.14) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 22px 22px;
+      background-attachment: fixed;
+    }
+
+    /* Crisp nearest-neighbor rendering for 160x200 LCD & QR canvases */
+    .pixel-canvas {
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* Studio glass panels */
+    .studio-panel {
+      background: rgba(30, 32, 48, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(205, 214, 244, 0.1);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+    }
+
+    /* Sculpted Retro-Modern Pocket Handheld Frame */
+    .handheld-chassis {
+      background: linear-gradient(165deg, #2b2e45 0%, #1e2030 50%, #151724 100%);
+      border: 1px solid rgba(205, 214, 244, 0.14);
+      box-shadow:
+        0 24px 56px rgba(0, 0, 0, 0.58),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        inset 0 -4px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    .lcd-bezel {
+      background: linear-gradient(180deg, #0e1019 0%, #161827 100%);
+      border: 1px solid rgba(205, 214, 244, 0.09);
+      box-shadow:
+        inset 0 4px 14px rgba(0, 0, 0, 0.82),
+        0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .lcd-screen-frame {
+      box-shadow:
+        0 0 0 2px #090a12,
+        0 0 22px rgba(137, 220, 235, 0.12);
+    }
+
+    /* Tactile D-Pad & Action Buttons */
+    .dpad-btn {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      background: linear-gradient(180deg, #353852 0%, #25273b 100%);
+      border: 1px solid rgba(205, 214, 244, 0.14);
+      box-shadow:
+        0 4px 0 #10121d,
+        0 6px 10px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      transition: transform 0.05s ease, box-shadow 0.05s ease, border-color 0.08s ease;
+    }
+
+    .dpad-btn.is-active,
+    .dpad-btn:active {
+      transform: translateY(3px);
+      background: linear-gradient(180deg, #45496a 0%, #30334d 100%);
+      box-shadow:
+        0 1px 0 #10121d,
+        0 2px 5px rgba(0, 0, 0, 0.38),
+        inset 0 1px 4px rgba(0, 0, 0, 0.4);
+      border-color: rgba(137, 220, 235, 0.65);
+    }
+
+    .action-btn-a {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      background: radial-gradient(circle at 34% 30%, #f9adc2 0%, #f38ba8 48%, #c95d7e 100%);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow:
+        0 5px 0 #7b2d46,
+        0 8px 16px rgba(243, 139, 168, 0.28),
+        inset 0 2px 2px rgba(255, 255, 255, 0.35);
+      transition: transform 0.05s ease, box-shadow 0.05s ease;
+    }
+
+    .action-btn-a.is-active,
+    .action-btn-a:active {
+      transform: translateY(4px);
+      box-shadow:
+        0 1px 0 #7b2d46,
+        0 2px 8px rgba(243, 139, 168, 0.35),
+        inset 0 2px 5px rgba(0, 0, 0, 0.24);
+    }
+
+    .action-btn-b {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      background: radial-gradient(circle at 34% 30%, #fdd2b4 0%, #fab387 48%, #cb7b4d 100%);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow:
+        0 5px 0 #7d4425,
+        0 8px 16px rgba(250, 179, 135, 0.24),
+        inset 0 2px 2px rgba(255, 255, 255, 0.35);
+      transition: transform 0.05s ease, box-shadow 0.05s ease;
+    }
+
+    .action-btn-b.is-active,
+    .action-btn-b:active {
+      transform: translateY(4px);
+      box-shadow:
+        0 1px 0 #7d4425,
+        0 2px 8px rgba(250, 179, 135, 0.32),
+        inset 0 2px 5px rgba(0, 0, 0, 0.24);
+    }
+
+    .studio-btn {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      background: linear-gradient(180deg, #2d3047 0%, #212336 100%);
+      border: 1px solid rgba(205, 214, 244, 0.14);
+      box-shadow: 0 3px 0 #0f101a, inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: transform 0.06s ease, box-shadow 0.06s ease, border-color 0.15s ease;
+    }
+
+    .studio-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0f101a;
+    }
+
+    /* Navigation tabs */
+    .nav-tab.is-active {
+      background: linear-gradient(135deg, rgba(166, 227, 161, 0.16), rgba(137, 220, 235, 0.18));
+      border-color: rgba(137, 220, 235, 0.55);
+      color: #ffffff;
+    }
+
+    /* Cartridge selector chip */
+    .cart-pill {
+      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .cart-pill:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Printable Game Boy-style Cartridge Card */
+    .gb-print-card {
+      background: #ffffff;
+      color: #11121c;
+      border: 2px solid #1e2030;
+      border-radius: 16px 16px 10px 10px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .gb-ridges {
+      background: repeating-linear-gradient(
+        180deg,
+        #dce1ed 0px,
+        #dce1ed 2.5px,
+        #ffffff 2.5px,
+        #ffffff 5px
+      );
+    }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(17, 18, 28, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(127, 132, 156, 0.45); border-radius: 9999px; }
+
+    /* Dedicated @media print layout: Clean 2x3 white cartridge sheet */
+    @media print {
+      @page {
+        size: auto;
+        margin: 8mm;
+      }
+      body {
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #000000 !important;
+      }
+      .no-print,
+      header,
+      #tab-bay,
+      #tab-deploy,
+      #studio-toast {
+        display: none !important;
+      }
+      #tab-print {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      #print-sheet-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 7mm !important;
+      }
+      .gb-print-card {
+        box-shadow: none !important;
+        border: 2px solid #000000 !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .print-stripe {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .gb-print-card canvas {
+        image-rendering: pixelated;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-400/25 selection:text-white">
+
+  <!-- ==================== STUDIO HEADER & 3 TABS ==================== -->
+  <header class="no-print sticky top-0 z-30 border-b border-studioBorder/90 bg-studioBg/92 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-3 sm:px-5 py-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <!-- Brand & Subtitle -->
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-300 via-cyan-300 to-purple-300 p-[1.5px] shrink-0 shadow-lg shadow-cyan-400/15">
+            <div class="w-full h-full rounded-[10px] bg-studioDeep flex items-center justify-center">
+              <!-- Inline SVG QR Cartridge Icon -->
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="2" width="18" height="20" rx="3" stroke="#89dceb" stroke-width="1.8" />
+                <path d="M7 5h10" stroke="#a6e3a1" stroke-width="1.8" stroke-linecap="round" />
+                <rect x="6.5" y="8.5" width="4.5" height="4.5" rx="0.8" fill="#a6e3a1" />
+                <rect x="13" y="8.5" width="4.5" height="4.5" rx="0.8" fill="#89dceb" />
+                <rect x="6.5" y="15" width="4.5" height="3.5" rx="0.8" fill="#cba6f7" />
+                <rect x="13" y="15" width="2" height="2" fill="#f9e2af" />
+                <rect x="15.5" y="16.5" width="2" height="2" fill="#f38ba8" />
+              </svg>
+            </div>
+          </div>
+          <div class="truncate">
+            <h1 class="font-pixel text-xs sm:text-sm tracking-wide text-white truncate">
+              QR CARTRIDGE ARCADE <span class="text-emerald-300">6-GAME</span>
+            </h1>
+            <p class="text-[11px] text-studioMuted leading-tight hidden sm:block">
+              Offline PWA Micro-Console Studio &amp; Handheld • Entire Game Inside Every QR Hash
+            </p>
+          </div>
+        </div>
+
+        <!-- BIOS Status Pill -->
+        <div class="hidden md:flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-studioCard border border-studioBorder text-[11px] font-mono text-emerald-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            G-BIOS 160×200 • 30FPS • 16-COL
+          </span>
+        </div>
+      </div>
+
+      <!-- 3 Main Studio Tabs -->
+      <nav class="grid grid-cols-3 gap-1.5 mt-2.5" role="tablist" aria-label="Studio Workspace Tabs">
+        <button type="button" data-tab="bay" role="tab" aria-selected="true"
+          class="nav-tab is-active flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-studioBorder bg-studioCard/80 text-xs sm:text-sm font-semibold text-studioText/85 hover:text-white transition">
+          <svg class="w-4 h-4 shrink-0 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2.5"></rect>
+            <rect x="8" y="5" width="8" height="6" rx="1"></rect>
+            <path d="M9 15h2m-1-1v2"></path>
+            <circle cx="15" cy="14.5" r="0.8" fill="currentColor"></circle>
+            <circle cx="13.5" cy="16.5" r="0.8" fill="currentColor"></circle>
+          </svg>
+          <span class="truncate">Play &amp; QR Bay</span>
+        </button>
+
+        <button type="button" data-tab="print" role="tab" aria-selected="false"
+          class="nav-tab flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-studioBorder bg-studioCard/80 text-xs sm:text-sm font-semibold text-studioText/85 hover:text-white transition">
+          <svg class="w-4 h-4 shrink-0 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span class="truncate">Printable QR Sheet</span>
+        </button>
+
+        <button type="button" data-tab="deploy" role="tab" aria-selected="false"
+          class="nav-tab flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-studioBorder bg-studioCard/80 text-xs sm:text-sm font-semibold text-studioText/85 hover:text-white transition">
+          <svg class="w-4 h-4 shrink-0 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span class="truncate">Offline PWA Deploy</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Global Non-Blocking Toast (replaces alert/confirm) -->
+  <div id="studio-toast" class="no-print fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-200">
+    <div id="studio-toast-inner" class="px-4 py-2.5 rounded-xl bg-studioDeep/95 border border-cyan-300/60 text-cyan-200 text-xs sm:text-sm font-semibold shadow-2xl flex items-center gap-2 whitespace-nowrap">
+      <span id="studio-toast-text">Ready</span>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="flex-1 w-full max-w-6xl mx-auto px-3 sm:px-5 py-4 sm:py-5">
+
+    <!-- ================================================================ -->
+    <!-- TAB 1: PLAY & QR CARTRIDGE BAY                                   -->
+    <!-- ================================================================ -->
+    <section id="tab-bay" class="space-y-4">
+
+      <!-- TOP BAR: 6-GAME + CUSTOM CARTRIDGE SELECTOR BAY -->
+      <div class="studio-panel rounded-2xl p-3.5 sm:p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="font-pixel text-xs sm:text-sm text-white">CARTRIDGE BAY <span class="text-studioMuted font-mono font-normal text-[11px]">(6 GAMES + CUSTOM)</span></h2>
+            <p class="text-[11px] sm:text-xs text-studioMuted mt-0.5">
+              Selecting any cartridge compresses it into <code class="font-mono text-cyan-300">#d.&lt;payload&gt;</code>, generates its live QR code, then round-trip decompresses &amp; boots it in the handheld.
+            </p>
+          </div>
+        </div>
+
+        <!-- Responsive Cartridge Grid -->
+        <div id="cartridge-selector-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2"></div>
+      </div>
+
+      <!-- MAIN SPLIT: LEFT/TOP HANDHELD CONSOLE + RIGHT/BOTTOM LIVE QR & TELEMETRY -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- LEFT: SLEEK RETRO-MODERN POCKET HANDHELD -->
+        <div class="lg:col-span-5 flex flex-col items-center">
+          <div class="handheld-chassis w-full max-w-[356px] rounded-[28px] p-4 sm:p-5 select-none">
+
+            <!-- Top Console Header Strip -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <span id="power-led" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#4ade80] shrink-0"></span>
+                <span id="console-title" class="font-pixel text-[11px] text-emerald-300 tracking-wider truncate">SNAKE</span>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <div class="px-2 py-0.5 rounded-md bg-studioDeep border border-studioBorder font-mono text-[11px] text-amber-200 font-bold">
+                  SC <span id="console-score">0</span>
+                </div>
+                <button id="btn-mute" type="button" title="Toggle Sound Mute"
+                  class="studio-btn w-7 h-7 rounded-lg flex items-center justify-center text-xs text-cyan-300">
+                  <span id="mute-icon">🔊</span>
+                </button>
+                <button id="btn-reset" type="button" title="Reset Cartridge (R)"
+                  class="studio-btn px-2 h-7 rounded-lg font-pixel text-[9px] text-studioText hover:text-white">
+                  RST
+                </button>
+              </div>
+            </div>
+
+            <!-- Recessed LCD Screen Bezel -->
+            <div class="lcd-bezel rounded-2xl p-2.5 sm:p-3 mb-4">
+              <div class="flex items-center justify-between px-1 mb-1.5 text-[9px] font-mono text-studioMuted uppercase tracking-widest">
+                <span>QR-POCKET 160×200</span>
+                <span id="console-hash-badge" class="text-emerald-300 font-bold">● BOOT FROM HASH</span>
+              </div>
+              <div class="lcd-screen-frame relative w-full aspect-[160/200] max-h-[340px] mx-auto rounded-lg overflow-hidden bg-studioDeep flex items-center justify-center">
+                <canvas id="bios-canvas" width="160" height="200" class="pixel-canvas w-full h-full block"></canvas>
+              </div>
+              <div id="console-controls-bar" class="mt-2 px-1 text-[10px] font-mono text-center text-cyan-200/90 truncate">
+                D-Pad Steer • Hold A Turbo
+              </div>
+            </div>
+
+            <!-- Tactile Touch D-Pad + Diagonal A/B Buttons -->
+            <div class="flex items-center justify-between px-1 sm:px-2 py-1">
+              <!-- Cross D-Pad -->
+              <div class="grid grid-cols-3 grid-rows-3 gap-1 w-[132px] h-[132px]">
+                <div></div>
+                <button type="button" data-btn="u" aria-label="Up"
+                  class="dpad-btn rounded-t-xl rounded-b-sm flex items-center justify-center text-studioText text-sm font-bold">▲</button>
+                <div></div>
+
+                <button type="button" data-btn="l" aria-label="Left"
+                  class="dpad-btn rounded-l-xl rounded-r-sm flex items-center justify-center text-studioText text-sm font-bold">◀</button>
+                <div class="rounded-md bg-studioDeep/80 border border-studioBorder/50 flex items-center justify-center">
+                  <div class="w-3.5 h-3.5 rounded-full bg-studioCard shadow-inner"></div>
+                </div>
+                <button type="button" data-btn="r" aria-label="Right"
+                  class="dpad-btn rounded-r-xl rounded-l-sm flex items-center justify-center text-studioText text-sm font-bold">▶</button>
+
+                <div></div>
+                <button type="button" data-btn="d" aria-label="Down"
+                  class="dpad-btn rounded-b-xl rounded-t-sm flex items-center justify-center text-studioText text-sm font-bold">▼</button>
+                <div></div>
+              </div>
+
+              <!-- Diagonal Game Boy A & B Buttons -->
+              <div class="flex items-center gap-3.5 pr-1">
+                <div class="flex flex-col items-center gap-1.5 translate-y-4">
+                  <button type="button" data-btn="b" aria-label="B Button"
+                    class="action-btn-b w-14 h-14 rounded-full font-pixel text-base font-bold text-studioDeep flex items-center justify-center">
+                    B
+                  </button>
+                  <span class="font-pixel text-[9px] text-orange-300 tracking-wider">B</span>
+                </div>
+
+                <div class="flex flex-col items-center gap-1.5 -translate-y-4">
+                  <button type="button" data-btn="a" aria-label="A Button"
+                    class="action-btn-a w-14 h-14 rounded-full font-pixel text-base font-bold text-studioDeep flex items-center justify-center">
+                    A
+                  </button>
+                  <span class="font-pixel text-[9px] text-rose-300 tracking-wider">A</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Keyboard Legend & Cosmetic Speaker Slits -->
+            <div class="mt-4 pt-2.5 border-t border-studioBorder/60 flex items-center justify-between gap-2">
+              <div class="text-[10px] font-mono text-studioMuted leading-snug">
+                Keys: <span class="text-studioText/85">Arrows/WASD</span> • <span class="text-rose-300">Z/Space=A</span> • <span class="text-orange-300">X/Shift=B</span> • <span class="text-cyan-300">R=Reset</span>
+              </div>
+              <div class="flex gap-1 shrink-0 opacity-55" aria-hidden="true">
+                <span class="w-1 h-4 rounded-full bg-studioDeep -rotate-12"></span>
+                <span class="w-1 h-4 rounded-full bg-studioDeep -rotate-12"></span>
+                <span class="w-1 h-4 rounded-full bg-studioDeep -rotate-12"></span>
+                <span class="w-1 h-4 rounded-full bg-studioDeep -rotate-12"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: LIVE QR CODE CARD, TELEMETRY PILLS & LIVE CODE EDITOR -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+          <div class="studio-panel rounded-2xl p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center sm:items-start">
+
+              <!-- Pure White #FFFFFF QR Code Box with Generous Quiet Zone -->
+              <div class="flex flex-col items-center shrink-0">
+                <div class="bg-white p-2.5 rounded-2xl shadow-xl border-2 border-studioBorder">
+                  <canvas id="live-qr-canvas" class="pixel-canvas block w-[204px] h-[204px] sm:w-[216px] sm:h-[216px]"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 mt-2.5 w-full">
+                  <button id="btn-download-png" type="button"
+                    class="studio-btn py-1.5 px-2.5 rounded-xl text-[11px] font-semibold text-cyan-300 hover:border-cyan-300/60 transition">
+                    ⬇ QR PNG
+                  </button>
+                  <button id="btn-copy-url" type="button"
+                    class="studio-btn py-1.5 px-2.5 rounded-xl text-[11px] font-semibold text-emerald-300 hover:border-emerald-300/60 transition">
+                    ⧉ Copy URL
+                  </button>
+                </div>
+                <button id="btn-copy-payload" type="button"
+                  class="studio-btn mt-1.5 w-full py-1.5 px-2.5 rounded-xl text-[11px] font-semibold text-purple-300 hover:border-purple-300/60 transition">
+                  ⧉ Copy Payload Only (#d.…)
+                </button>
+              </div>
+
+              <!-- Config & Live Compression Telemetry -->
+              <div class="flex-1 min-w-0 w-full space-y-3">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <h3 class="font-pixel text-xs sm:text-sm text-white truncate">
+                      LIVE QR: <span id="qr-card-title" class="text-emerald-300">SNAKE</span>
+                    </h3>
+                  </div>
+                  <span id="qr-rating-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/40">
+                    Easy Scan
+                  </span>
+                </div>
+
+                <!-- Editable Base PWA URL + ECC Level Toggle -->
+                <div>
+                  <label for="base-url-input" class="block text-[11px] font-semibold text-studioText/85 mb-1">
+                    Base Offline PWA URL <span class="text-studioMuted font-normal">(updates all 6 QR codes live)</span>
+                  </label>
+                  <div class="flex gap-1.5">
+                    <input id="base-url-input" type="url" value="https://your-site.github.io/qr-arcade/"
+                      placeholder="https://your-site.github.io/qr-arcade/"
+                      class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-studioDeep border border-studioBorder focus:border-cyan-300 focus:outline-none text-xs font-mono text-cyan-200 placeholder-studioMuted" />
+                    <div class="inline-flex rounded-xl bg-studioDeep border border-studioBorder p-0.5 shrink-0" role="group" aria-label="QR Error Correction">
+                      <button type="button" data-ecc="L" class="ecc-btn px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold bg-cyan-400/20 text-cyan-200 border border-cyan-300/40">L</button>
+                      <button type="button" data-ecc="M" class="ecc-btn px-2.5 py-1 rounded-lg font-mono text-[11px] text-studioMuted hover:text-white">M</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Live Telemetry Pills -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div class="rounded-xl bg-studioDeep/90 border border-studioBorder/80 p-2 text-center">
+                    <div class="text-[9px] font-mono text-studioMuted uppercase">Raw JS</div>
+                    <div id="stat-raw-bytes" class="font-mono font-bold text-xs sm:text-sm text-amber-200 mt-0.5">-- B</div>
+                  </div>
+                  <div class="rounded-xl bg-studioDeep/90 border border-studioBorder/80 p-2 text-center">
+                    <div class="text-[9px] font-mono text-studioMuted uppercase">Payload (#d.)</div>
+                    <div id="stat-payload-bytes" class="font-mono font-bold text-xs sm:text-sm text-purple-300 mt-0.5">-- B</div>
+                  </div>
+                  <div class="rounded-xl bg-studioDeep/90 border border-studioBorder/80 p-2 text-center">
+                    <div class="text-[9px] font-mono text-studioMuted uppercase">Total QR URL</div>
+                    <div id="stat-total-bytes" class="font-mono font-bold text-xs sm:text-sm text-emerald-300 mt-0.5">-- B</div>
+                  </div>
+                  <div class="rounded-xl bg-studioDeep/90 border border-studioBorder/80 p-2 text-center">
+                    <div class="text-[9px] font-mono text-studioMuted uppercase">QR Version</div>
+                    <div id="stat-qr-version" class="font-mono font-bold text-xs sm:text-sm text-cyan-300 mt-0.5">v--</div>
+                  </div>
+                  <div class="rounded-xl bg-studioDeep/90 border border-studioBorder/80 p-2 text-center">
+                    <div class="text-[9px] font-mono text-studioMuted uppercase">Module Grid</div>
+                    <div id="stat-qr-grid" class="font-mono font-bold text-xs sm:text-sm text-pink-300 mt-0.5">--×--</div>
+                  </div>
+                  <div class="rounded-xl bg-studioDeep/90 border border-studioBorder/80 p-2 text-center">
+                    <div class="text-[9px] font-mono text-studioMuted uppercase">Compression</div>
+                    <div id="stat-ratio" class="font-mono font-bold text-xs sm:text-sm text-sky-300 mt-0.5">--%</div>
+                  </div>
+                </div>
+
+                <!-- Encoded Hash Preview & Round-Trip Boot Trigger -->
+                <div class="rounded-xl bg-studioDeep/85 border border-studioBorder/80 px-3 py-2 flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="text-[9px] font-mono text-studioMuted uppercase">DEFLATED URL HASH PREVIEW</div>
+                    <div id="stat-hash-preview" class="font-mono text-[11px] text-studioText/90 truncate">#d.…</div>
+                  </div>
+                  <button id="btn-boot-hash" type="button"
+                    class="studio-btn px-3 py-1.5 rounded-lg text-[11px] font-semibold text-emerald-300 hover:border-emerald-300/60 shrink-0">
+                    ▶ Boot Hash
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expandable Live Minified Code Editor -->
+            <div class="border-t border-studioBorder/80 pt-3">
+              <button id="btn-toggle-editor" type="button"
+                class="w-full flex items-center justify-between text-left py-1 text-xs font-semibold text-studioText hover:text-cyan-300 transition">
+                <span class="flex items-center gap-2">
+                  <span class="font-mono text-purple-300">&lt;/&gt;</span>
+                  <span>Live Minified Code Editor <span class="text-studioMuted font-normal">(Tweak code &amp; watch QR version update live)</span></span>
+                </span>
+                <svg id="editor-chevron" class="w-4 h-4 text-studioMuted transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+
+              <div id="editor-drawer" class="hidden mt-3 space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-studioMuted">
+                  <span>API: <code class="text-cyan-300">G.cls, G.r, G.t, G.k, G.p, G.snd, G.sc, G.ov, G.loop, G.pal[0..15]</code></span>
+                  <div class="flex items-center gap-2">
+                    <button id="btn-reset-code" type="button" class="text-orange-300 hover:underline">Reset Default</button>
+                    <button id="btn-apply-encode" type="button"
+                      class="px-3 py-1 rounded-lg bg-emerald-400/20 border border-emerald-400/50 text-emerald-200 font-bold hover:bg-emerald-400/30 transition">
+                      Apply &amp; Re-Encode
+                    </button>
+                  </div>
+                </div>
+                <textarea id="code-editor-textarea" rows="10" spellcheck="false"
+                  class="w-full rounded-xl bg-studioDeep border border-studioBorder focus:border-cyan-300 focus:outline-none p-3 font-mono text-xs leading-relaxed text-studioText resize-y"></textarea>
+                <div id="code-error-banner" class="hidden rounded-xl bg-rose-500/15 border border-rose-400/50 px-3 py-2 text-xs font-mono text-rose-200"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- TAB 2: PRINTABLE QR CARTRIDGE SHEET (2x3 GRID OF ALL 6 GAMES)    -->
+    <!-- ================================================================ -->
+    <section id="tab-print" class="hidden space-y-4">
+      <div class="no-print studio-panel rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="font-pixel text-xs sm:text-sm text-white">PRINTABLE 6-GAME QR CARTRIDGE SHEET</h2>
+          <p class="text-xs sm:text-sm text-studioMuted mt-1">
+            Print this clean 2×3 sheet of physical Game Boy–style cartridges. Once a phone caches your PWA shell once, scanning any printed card launches that game in 1 tap completely offline!
+          </p>
+        </div>
+        <button id="btn-print-sheet" type="button"
+          class="studio-btn px-4 py-2.5 rounded-xl font-pixel text-[11px] text-cyan-300 hover:border-cyan-300/60 flex items-center justify-center gap-2 shrink-0">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>PRINT 2×3 SHEET</span>
+        </button>
+      </div>
+
+      <!-- 2x3 Printable Cartridge Grid -->
+      <div id="print-sheet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- TAB 3: OFFLINE PWA SHELL DEPLOY                                  -->
+    <!-- ================================================================ -->
+    <section id="tab-deploy" class="hidden space-y-5">
+      <div class="studio-panel rounded-2xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-400/15 border border-emerald-400/40 font-mono text-[11px] font-bold text-emerald-300 mb-1.5">
+              METHOD 3 • ZERO-GAME-CODE CACHED SHELL
+            </span>
+            <h2 class="font-pixel text-sm sm:text-base text-white">3-STEP GITHUB PAGES OFFLINE DEPLOY</h2>
+          </div>
+          <span id="pwa-shell-size-pill" class="px-3 py-1 rounded-xl bg-studioDeep border border-studioBorder font-mono text-xs text-cyan-300 font-bold">
+            Shell Size: -- KB
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
+            <div class="font-pixel text-xs text-emerald-300 mb-1.5">1. HOST 3 TINY FILES</div>
+            <p class="text-xs text-studioText/85 leading-relaxed">
+              Download <code class="font-mono text-amber-200">index.html</code>, <code class="font-mono text-amber-200">sw.js</code>, and <code class="font-mono text-amber-200">manifest.json</code> below and push them to a free GitHub Pages repository (e.g. <code class="font-mono text-cyan-300">qr-arcade</code>).
+            </p>
+          </div>
+          <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
+            <div class="font-pixel text-xs text-cyan-300 mb-1.5">2. PRINT YOUR 6 CARDS</div>
+            <p class="text-xs text-studioText/85 leading-relaxed">
+              Paste your live HTTPS GitHub Pages URL into the <strong>Base Offline PWA URL</strong> box in Tab 1, then open Tab 2 and print the 2×3 Cartridge Sheet.
+            </p>
+          </div>
+          <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
+            <div class="font-pixel text-xs text-purple-300 mb-1.5">3. SCAN ONCE, PLAY OFFLINE</div>
+            <p class="text-xs text-studioText/85 leading-relaxed">
+              Scan any QR cartridge once with your phone camera so <code class="font-mono text-emerald-300">sw.js</code> caches the tiny BIOS shell. Switch on <strong>Airplane Mode</strong>—all 6 printed QR cartridges now launch in 1 tap offline!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Downloadable & Copyable Files -->
+      <div id="pwa-files-list" class="space-y-4"></div>
+    </section>
+
+  </main>
+
+  <!-- ==================== STUDIO FOOTER ==================== -->
+  <footer class="no-print border-t border-studioBorder/70 bg-studioDeep/60 py-3 mt-4">
+    <div class="max-w-6xl mx-auto px-3 sm:px-5 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-studioMuted">
+      <span>&copy; 2026 NazreenNasyuha &bull; QR Cartridge Arcade</span>
+      <span>MIT License &bull; Offline PWA Micro-Console Studio</span>
+    </div>
+  </footer>
+
+  <!-- ==================== STUDIO & CONSOLE JAVASCRIPT ==================== -->
+  <script>
+    (() => {
+      'use strict';
+
+      /* =====================================================================
+         1. NON-BLOCKING TOAST, CLIPBOARD & FILE DOWNLOAD HELPERS
+      ===================================================================== */
+      let toastTimer = null;
+      function showToast(msg, tone = 'cyan') {
+        const el = document.getElementById('studio-toast');
+        const inner = document.getElementById('studio-toast-inner');
+        const text = document.getElementById('studio-toast-text');
+        if (!el || !inner || !text) return;
+
+        const tones = {
+          cyan: 'border-cyan-300/60 text-cyan-200',
+          emerald: 'border-emerald-400/60 text-emerald-200',
+          amber: 'border-amber-300/60 text-amber-200',
+          rose: 'border-rose-400/60 text-rose-200'
+        };
+        text.textContent = msg;
+        inner.className = 'px-4 py-2.5 rounded-xl bg-studioDeep/95 border text-xs sm:text-sm font-semibold shadow-2xl flex items-center gap-2 whitespace-nowrap ' + (tones[tone] || tones.cyan);
+
+        el.classList.remove('opacity-0');
+        el.classList.add('opacity-100');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.classList.remove('opacity-100');
+          el.classList.add('opacity-0');
+        }, 2300);
+      }
+
+      async function copyToClipboard(str, okMsg = 'Copied to clipboard!') {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          try {
+            await navigator.clipboard.writeText(str);
+            showToast(okMsg, 'emerald');
+            return true;
+          } catch (_) {
+            // Fall through to legacy execCommand fallback (e.g., file:// contexts)
+          }
+        }
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = str;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (ok) {
+            showToast(okMsg, 'emerald');
+            return true;
+          }
+        } catch (_) {}
+        showToast('Clipboard copy blocked — please copy manually.', 'amber');
+        return false;
+      }
+
+      function downloadFile(filename, content, mime = 'text/plain;charset=utf-8') {
+        try {
+          const blob = new Blob([content], { type: mime });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast(`Downloaded ${filename}`, 'emerald');
+        } catch (_) {
+          showToast(`Download blocked in sandbox for ${filename}`, 'amber');
+        }
+      }
+
+      /* =====================================================================
+         2. UNIFIED 16-COLOR MICRO-CONSOLE BIOS (`G`) — 160×200 @ 30 FPS
+            Exact 1:1 parity with exported standalone Offline PWA index.html
+      ===================================================================== */
+      const PALETTE = [
+        '#11121c', // 0: deep midnight background
+        '#1c1f30', // 1: subtle checkerboard / court tile
+        '#45475a', // 2: mid slate / border / stone pillar
+        '#e6edf7', // 3: crisp white / highlights / ball
+        '#f38ba8', // 4: coral pink / Z-piece / CPU / enemy
+        '#fab387', // 5: warm peach-orange / L-piece / brick
+        '#f9e2af', // 6: golden yellow / bonus / O-piece / laser
+        '#a6e3a1', // 7: emerald green / snake body / shields
+        '#89dceb', // 8: bright cyan / pong player / I-piece
+        '#89b4fa', // 9: sky blue / J-piece / player ship
+        '#cba6f7', // 10: lavender / T-piece / bomb
+        '#f5c2e7', // 11: pastel magenta / gem / top alien
+        '#5eead4', // 12: mint teal / distinct snake head
+        '#ff6b81', // 13: bright coral-red / apple
+        '#38bdf8', // 14: vibrant azure / ball trail
+        '#313244'  // 15: subtle dark gray / ghost / court dash
+      ];
+
+      const BIOS = (() => {
+        const canvas = document.getElementById('bios-canvas');
+        const c = canvas.getContext('2d');
+        const scoreEl = document.getElementById('console-score');
+
+        let ac = null;
+        let muted = false;
+        let loopFn = null;
+        let rafId = null;
+        let frame = 0;
+        let acc = 0;
+        let lastTs = 0;
+        let score = 0;
+        let over = false;
+        let overMsg = '';
+        let overLock = 0;
+        let currentCode = '';
+        let errCallback = null;
+
+        const k = { u: false, d: false, l: false, r: false, a: false, b: false };
+        const p = { u: false, d: false, l: false, r: false, a: false, b: false };
+
+        function unlockAudio() {
+          if (muted) return null;
+          try {
+            if (!ac) {
+              const Ctx = window.AudioContext || window.webkitAudioContext;
+              if (Ctx) ac = new Ctx();
+            }
+            if (ac && ac.state === 'suspended') ac.resume().catch(() => {});
+            return ac;
+          } catch (_) {
+            return null;
+          }
+        }
+
+        const G = {
+          c,
+          W: 160,
+          H: 200,
+          pal: PALETTE,
+          k,
+          p,
+          cls(col = 0) {
+            G.r(0, 0, 160, 200, col);
+          },
+          r(x, y, w, h, col) {
+            c.fillStyle = typeof col === 'number' ? (PALETTE[col] || PALETTE[3]) : col;
+            c.fillRect(x | 0, y | 0, w | 0, h | 0);
+          },
+          t(str, x, y, col = 3, sz = 8) {
+            c.fillStyle = typeof col === 'number' ? (PALETTE[col] || PALETTE[3]) : col;
+            c.font = `bold ${sz || 8}px monospace`;
+            c.textBaseline = 'top';
+            c.fillText(String(str), x | 0, y | 0);
+          },
+          snd(freq, dur = 0.06, type = 'square') {
+            if (muted || !freq) return;
+            const ctx = unlockAudio();
+            if (!ctx) return;
+            try {
+              const now = ctx.currentTime;
+              const o = ctx.createOscillator();
+              const g = ctx.createGain();
+              o.type = type || 'square';
+              o.frequency.setValueAtTime(freq, now);
+              g.gain.setValueAtTime(0.065, now);
+              g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+              o.connect(g);
+              g.connect(ctx.destination);
+              o.start(now);
+              o.stop(now + dur + 0.01);
+            } catch (_) {}
+          },
+          sc(pts) {
+            score = pts | 0;
+            if (scoreEl) scoreEl.textContent = String(score);
+          },
+          ov(msg = 'GAME OVER') {
+            if (over) return;
+            over = true;
+            overMsg = String(msg || 'GAME OVER');
+            overLock = 12;
+            G.snd(150, 0.22, 'sawtooth');
+          },
+          loop(fn) {
+            loopFn = fn;
+          }
+        };
+
+        function clearPressed() {
+          p.u = p.d = p.l = p.r = p.a = p.b = false;
+        }
+
+        function clearAllInputs() {
+          k.u = k.d = k.l = k.r = k.a = k.b = false;
+          clearPressed();
+        }
+
+        function drawGameOver() {
+          c.fillStyle = 'rgba(17,18,28,0.84)';
+          c.fillRect(10, 60, 140, 80);
+          G.r(10, 60, 140, 2, 4);
+          G.r(10, 138, 140, 2, 4);
+          G.t('GAME OVER', 40, 70, 4, 12);
+          if (overMsg && overMsg !== 'GAME OVER') {
+            const mx = Math.max(14, (160 - overMsg.length * 5) >> 1);
+            G.t(overMsg.slice(0, 24), mx, 88, 6, 8);
+          }
+          G.t('SCORE: ' + score, 44, 104, 3, 8);
+          if (overLock <= 0 && ((frame >> 3) & 1)) {
+            G.t('A / B TO REBOOT', 32, 122, 7, 8);
+          }
+        }
+
+        function renderError(err) {
+          G.cls(0);
+          G.t('CART ERROR', 34, 66, 4, 12);
+          const msg = String(err && err.message ? err.message : err);
+          G.t(msg.slice(0, 24), 8, 92, 6, 8);
+          G.t(msg.slice(24, 48), 8, 104, 6, 8);
+        }
+
+        function stop() {
+          if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+          loopFn = null;
+        }
+
+        function tick(ts) {
+          if (!lastTs) lastTs = ts;
+          acc += Math.min(ts - lastTs, 100);
+          lastTs = ts;
+
+          const STEP = 1000 / 30;
+          let steps = 0;
+          while (acc >= STEP && steps < 2) {
+            acc -= STEP;
+            steps++;
+            if (over) {
+              if (overLock > 0) {
+                overLock--;
+              } else if (p.a || p.b) {
+                clearPressed();
+                boot(currentCode, errCallback);
+                return;
+              }
+              drawGameOver();
+            } else if (loopFn) {
+              try {
+                loopFn(frame);
+              } catch (err) {
+                stop();
+                renderError(err);
+                if (errCallback) errCallback(err);
+                return;
+              }
+            }
+            frame++;
+            clearPressed();
+          }
+          rafId = requestAnimationFrame(tick);
+        }
+
+        function boot(code, onErr = null) {
+          stop();
+          errCallback = onErr;
+          currentCode = code;
+          frame = 0;
+          acc = 0;
+          lastTs = 0;
+          over = false;
+          overMsg = '';
+          overLock = 0;
+          clearAllInputs();
+          G.sc(0);
+          G.cls(0);
+
+          try {
+            new Function('G', code)(G);
+            if (errCallback) errCallback(null);
+            rafId = requestAnimationFrame(tick);
+            return true;
+          } catch (err) {
+            renderError(err);
+            if (errCallback) errCallback(err);
+            return false;
+          }
+        }
+
+        return {
+          boot,
+          reset() {
+            if (currentCode) boot(currentCode, errCallback);
+          },
+          setButton(btn, down) {
+            if (!(btn in k)) return;
+            if (down) {
+              unlockAudio();
+              if (!k[btn]) p[btn] = true;
+              k[btn] = true;
+            } else {
+              k[btn] = false;
+            }
+          },
+          releaseAll: clearAllInputs,
+          toggleMute() {
+            muted = !muted;
+            if (!muted) G.snd(660, 0.05, 'triangle');
+            return muted;
+          }
+        };
+      })();
+
+      /* =====================================================================
+         3. NATIVE DEFLATE-RAW + BASE64URL QR HASH CODEC
+      ===================================================================== */
+      async function encodeToHash(code) {
+        if (typeof CompressionStream !== 'undefined') {
+          const cs = new CompressionStream('deflate-raw');
+          const w = cs.writable.getWriter();
+          w.write(new TextEncoder().encode(code));
+          w.close();
+          const buf = await new Response(cs.readable).arrayBuffer();
+          const bytes = new Uint8Array(buf);
+          let bin = '';
+          for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+          return '#d.' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+        return '#r.' + encodeURIComponent(code);
+      }
+
+      const MAX_DECODED_BYTES = 32768; // 32 KB ceiling prevents deflate decompression bombs
+
+      async function decodeFromHash(hash) {
+        if (!hash) throw new Error('Empty hash payload');
+        if (hash.startsWith('#d.')) {
+          if (typeof DecompressionStream === 'undefined') {
+            throw new Error('Browser does not support DecompressionStream');
+          }
+          let s = hash.slice(3).replace(/-/g, '+').replace(/_/g, '/');
+          while (s.length % 4) s += '=';
+          const bin = atob(s);
+          const u = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+          const ds = new DecompressionStream('deflate-raw');
+          const w = ds.writable.getWriter();
+          w.write(u);
+          w.close();
+          const reader = ds.readable.getReader();
+          const chunks = [];
+          let total = 0;
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            total += value.byteLength;
+            if (total > MAX_DECODED_BYTES) {
+              await reader.cancel();
+              throw new Error('Payload exceeds 32 KB safety limit');
+            }
+            chunks.push(value);
+          }
+          const out = new Uint8Array(total);
+          let offset = 0;
+          for (const chunk of chunks) {
+            out.set(chunk, offset);
+            offset += chunk.byteLength;
+          }
+          return new TextDecoder().decode(out);
+        }
+        if (hash.startsWith('#r.')) {
+          const decoded = decodeURIComponent(hash.slice(3));
+          if (new TextEncoder().encode(decoded).length > MAX_DECODED_BYTES) {
+            throw new Error('Payload exceeds 32 KB safety limit');
+          }
+          return decoded;
+        }
+        throw new Error('Unknown QR hash format');
+      }
+
+      /* =====================================================================
+         4. ALL 6 ULTRA-OPTIMIZED CARTRIDGES + CUSTOM CART SLOT
+            Each runs natively against the 16-color `G` BIOS API (160x200)
+      ===================================================================== */
+      const CARTRIDGE_CATALOG = [
+        {
+          id: 'snake',
+          name: 'SNAKE',
+          isNew: true,
+          subtitle: '16×18 • Bonus Berry • Turbo',
+          accent: '#a6e3a1',
+          stripeBg: '#dcfce7',
+          icon: '🐍',
+          controls: 'D-Pad Steer • Hold A Turbo',
+          code: `let W=16,H=18,s=[[8,9],[7,9],[6,9]],d=[1,0],q=[],ap,bn=0,bt=0,sc=0,ea=0,t=0;
+const fr=()=>{let x,y;do{x=Math.random()*W|0;y=Math.random()*H|0}while(s.some(p=>p[0]==x&&p[1]==y)||(ap&&ap[0]==x&&ap[1]==y)||(bn&&bn[0]==x&&bn[1]==y));return[x,y]};
+ap=fr();
+G.loop(f=>{
+let l=q.length?q[q.length-1]:d,n=G.p.u?[0,-1]:G.p.d?[0,1]:G.p.l?[-1,0]:G.p.r?[1,0]:0;
+if(n&&(n[0]+l[0]||n[1]+l[1])&&(n[0]!=l[0]||n[1]!=l[1])&&q.length<3)q.push(n);
+if(bt>0&&--bt==0)bn=0;
+if(++t>=(G.k.a?2:Math.max(3,8-(s.length/6|0)))){t=0;if(q.length)d=q.shift();
+let x=s[0][0]+d[0],y=s[0][1]+d[1];
+if(x<0||x>=W||y<0||y>=H||s.some(p=>p[0]==x&&p[1]==y))return G.ov('CRASHED!');
+s.unshift([x,y]);
+if(x==ap[0]&&y==ap[1]){sc+=10;ea++;G.sc(sc);G.snd(580,.05);ap=fr();if(ea%5==0){bn=fr();bt=150}}
+else if(bn&&x==bn[0]&&y==bn[1]){sc+=50;G.sc(sc);G.snd(880,.1,'triangle');bn=0;bt=0}
+else s.pop()}
+G.cls(0);G.t('LEN:'+s.length,4,6,7,8);if(G.k.a)G.t('TURBO',114,6,8,8);
+if(bt>0){G.r(58,8,50,5,15);G.r(58,8,bt/3|0,5,6)}
+for(let y=0;y<H;y++)for(let x=0;x<W;x++)G.r(x*10,20+y*10,10,10,(x+y)&1);
+G.r(0,20,160,1,2);G.r(0,199,160,1,2);G.r(0,20,1,180,2);G.r(159,20,1,180,2);
+G.r(ap[0]*10+2,22+ap[1]*10,6,6,13);G.r(ap[0]*10+4,21+ap[1]*10,2,2,7);
+if(bn&&(bt>40||(f>>2)&1))G.r(bn[0]*10+1,21+bn[1]*10,8,8,6);
+s.map((p,i)=>{let X=p[0]*10,Y=20+p[1]*10;G.r(X+1,Y+1,8,8,i?7:12);
+if(!i){let ex=d[0]>0?6:2,ey=d[1]>0?6:2;G.r(X+ex,Y+ey,2,2,0);G.r(X+(d[0]?ex:6),Y+(d[1]?ey:6),2,2,0)}});
+});`
+        },
+        {
+          id: 'pong',
+          name: 'PONG',
+          isNew: true,
+          subtitle: 'Portrait Court • Dash • Sets to 7',
+          accent: '#89dceb',
+          stripeBg: '#cffafe',
+          icon: '🏓',
+          controls: '◀▶ Paddle • A Dash / Power-Hit',
+          code: `let px=64,cx=64,pw=32,bx,by,vx,vy,ps=0,cs=0,lv=1,sc=0,ds=0,dc=0,wt=24,tr=[];
+const sv=d=>{bx=80;by=100;tr=[];wt=24;let a=(Math.random()-.5)*1.2,sp=2.4+lv*.35;vx=Math.sin(a)*sp;vy=d*Math.cos(a)*sp};
+sv(1);
+G.loop(f=>{
+if(dc>0)dc--;if(ds>0)ds--;
+if(G.p.a&&dc==0){ds=7;dc=24;G.snd(520,.04,'triangle')}
+let mv=ds>0?6.5:3.5;
+if(G.k.l)px=Math.max(2,px-mv);if(G.k.r)px=Math.min(158-pw,px+mv);
+let tx=vy<0?bx:80,as=Math.min(4.2,1.9+lv*.42);
+if(cx+pw/2<tx-3)cx=Math.min(158-pw,cx+as);else if(cx+pw/2>tx+3)cx=Math.max(2,cx-as);
+if(wt>0)wt--;else{
+tr.push([bx,by]);if(tr.length>5)tr.shift();
+bx+=vx;by+=vy;
+if(bx<3){bx=3;vx=Math.abs(vx);G.snd(260,.03)}
+if(bx>157){bx=157;vx=-Math.abs(vx);G.snd(260,.03)}
+if(vy>0&&by>=180&&by<=188&&bx+3>=px&&bx-3<=px+pw){
+let o=(bx-(px+pw/2))/(pw/2),sp=Math.min(5.6,Math.hypot(vx,vy)*(ds>0?1.18:1.05));
+vx=o*sp*.85;vy=-Math.sqrt(Math.max(2,sp*sp-vx*vx));by=180;G.snd(ds>0?660:440,.04)}
+if(vy<0&&by<=20&&by>=12&&bx+3>=cx&&bx-3<=cx+pw){
+let o=(bx-(cx+pw/2))/(pw/2),sp=Math.min(5.4,Math.hypot(vx,vy)*1.04);
+vx=o*sp*.85;vy=Math.sqrt(Math.max(2,sp*sp-vx*vx));by=20;G.snd(360,.04)}
+if(by>202){cs++;G.snd(150,.14,'sawtooth');if(cs>=7)return G.ov('CPU WINS '+cs+'-'+ps);sv(-1)}
+if(by<-2){ps++;sc+=25;G.sc(sc);G.snd(740,.08);
+if(ps>=7){lv++;sc+=100;G.sc(sc);ps=cs=0;G.snd(920,.16,'triangle')}sv(1)}}
+G.cls(0);G.r(0,0,2,200,2);G.r(158,0,2,200,2);
+for(let x=6;x<154;x+=10)G.r(x,99,5,2,15);
+G.t(cs,12,72,4,20);G.t(ps,12,108,8,20);G.t('LV'+lv,126,90,6,8);
+tr.map((p,i)=>G.r(p[0]-2,p[1]-2,4,4,i>2?14:15));
+G.r(bx-3,by-3,6,6,3);
+G.r(cx,14,pw,5,4);G.r(px,184,pw,5,ds>0?6:8);
+});`
+        },
+        {
+          id: 'tetris',
+          name: 'TETRIS',
+          isNew: false,
+          subtitle: '10×20 • 7 Pieces • Ghost',
+          accent: '#cba6f7',
+          stripeBg: '#f3e8ff',
+          icon: '▦',
+          controls: '◀▶ Move • ▼ Soft • A/▲ Rotate • B Drop',
+          code: `let S=9,O=10,Y=10,b=Array.from({length:20},()=>Array(10).fill(0)),
+P='01112131,10201121,10011121,10200111,00101121,00011121,20011121'.split(',').map(s=>[0,2,4,6].map(i=>[+s[i],+s[i+1]])),
+C=[8,6,10,7,4,9,5],sc=0,ln=0,lv=1,t=0,ht=0,np=Math.random()*7|0,cp,sh,px,py;
+const ok=(m,x,y)=>m.every(([a,d])=>x+a>=0&&x+a<10&&y+d<20&&(y+d<0||!b[y+d][x+a])),
+sp=()=>{cp=np;np=Math.random()*7|0;sh=P[cp].map(p=>[...p]);px=3;py=cp?0:-1;if(!ok(sh,px,py))G.ov('STACKED OUT')},
+lk=()=>{sh.map(([a,d])=>{if(py+d>=0)b[py+d][px+a]=C[cp]});let c=0;
+b=b.filter(r=>r.some(v=>!v)||(c++,0));while(b.length<20)b.unshift(Array(10).fill(0));
+if(c){sc+=[0,100,300,500,800][c]*lv;ln+=c;lv=1+(ln/10|0);G.sc(sc);G.snd(420+c*120,.1)}sp()};
+sp();
+G.loop(f=>{
+let mv=G.p.l?-1:G.p.r?1:0;
+if(mv)ht=0;else if(G.k.l||G.k.r){if(++ht>6&&ht%3==0)mv=G.k.l?-1:1}else ht=0;
+if(mv&&ok(sh,px+mv,py)){px+=mv;G.snd(220,.02)}
+if((G.p.a||G.p.u)&&cp!=1){let n=cp?2:3,r=sh.map(([a,d])=>[n-d,a]);
+for(let k of[0,-1,1,-2,2])if(ok(r,px+k,py)){sh=r;px+=k;G.snd(380,.04,'triangle');break}}
+if(G.p.b){while(ok(sh,px,py+1)){py++;sc+=2}G.sc(sc);G.snd(150,.06);lk();t=0}
+else if(++t>=(G.k.d?2:Math.max(4,24-lv*2))){t=0;if(ok(sh,px,py+1)){py++;if(G.k.d)G.sc(++sc)}else lk()}
+G.cls(0);G.r(O-2,Y-2,94,184,2);G.r(O,Y,90,180,0);
+for(let y=0;y<20;y++)for(let x=0;x<10;x++)if(b[y][x])G.r(O+x*S+1,Y+y*S+1,S-2,S-2,b[y][x]);
+let gy=py;while(ok(sh,px,gy+1))gy++;
+sh.map(([a,d])=>{if(gy+d>=0)G.r(O+(px+a)*S+2,Y+(gy+d)*S+2,S-4,S-4,15);if(py+d>=0)G.r(O+(px+a)*S+1,Y+(py+d)*S+1,S-2,S-2,C[cp])});
+G.t('NEXT',112,14,3,8);G.r(110,26,42,36,2);G.r(112,28,38,32,0);
+P[np].map(([a,d])=>G.r(116+a*8,34+d*8,7,7,C[np]));
+G.t('LVL',112,74,8,8);G.t(lv,112,86,3,10);
+G.t('LNS',112,108,10,8);G.t(ln,112,120,3,10);
+});`
+        },
+        {
+          id: 'invaders',
+          name: 'SPACE INVADERS',
+          isNew: false,
+          subtitle: '5×8 Fleet • Shields • Waves',
+          accent: '#f9e2af',
+          stripeBg: '#fef9c3',
+          icon: '👾',
+          controls: '◀▶ Move • A Fire Laser',
+          code: `let px=73,li=3,sc=0,wv=1,inv=0,dir=1,st=0,an=0,et=20,ps=[],es=[],al=[],bk=[];
+const mkB=()=>{bk=[];for(let i=0;i<3;i++)for(let r=0;r<4;r++)for(let c=0;c<6;c++)
+if(!(r==3&&(c==2||c==3)))bk.push({x:20+i*48+c*4,y:156+r*4,a:1})},
+mkW=()=>{al=[];dir=1;for(let r=0;r<5;r++)for(let c=0;c<8;c++)
+al.push({x:16+c*15,y:Math.min(46,20+wv*3)+r*13,r,a:1});ps=[];es=[];mkB()};
+mkW();
+G.loop(f=>{
+if(G.k.l&&px>4)px-=3;if(G.k.r&&px<142)px+=3;
+if(G.p.a&&ps.length<2){ps.push({x:px+6,y:176});G.snd(680,.04)}
+if(inv>0)inv--;
+let lv=al.filter(e=>e.a);
+if(!lv.length){sc+=200;G.sc(sc);wv++;G.snd(880,.15,'triangle');mkW();return}
+if(++st>=Math.max(2,(lv.length/2.2|0)+Math.max(1,7-wv))){st=0;an^=1;
+let ed=lv.some(e=>e.x+dir*3<6||e.x+dir*3>144);
+if(ed){dir=-dir;lv.map(e=>{e.y+=7;if(e.y>=172)G.ov('INVADED!')})}else lv.map(e=>e.x+=dir*3);
+bk.map(k=>{if(k.a&&lv.some(e=>e.x<k.x+4&&e.x+10>k.x&&e.y+8>k.y&&e.y<k.y+4))k.a=0})}
+if(--et<=0){et=Math.max(12,36-wv*3);let cols={};lv.map(e=>cols[e.x]=e);
+let bot=Object.values(cols),s=bot[Math.random()*bot.length|0];if(s)es.push({x:s.x+5,y:s.y+8})}
+ps=ps.filter(s=>{s.y-=5;if(s.y<12)return 0;
+let h=bk.find(k=>k.a&&s.x>=k.x-1&&s.x<=k.x+4&&s.y<=k.y+4&&s.y+5>=k.y);if(h){h.a=0;return 0}
+let a=al.find(e=>e.a&&s.x>=e.x&&s.x<=e.x+10&&s.y<=e.y+8&&s.y+5>=e.y);
+if(a){a.a=0;sc+=a.r==0?30:a.r<3?20:10;G.sc(sc);G.snd(320,.05);return 0}return 1});
+es=es.filter(s=>{s.y+=2.4+wv*.2;if(s.y>198)return 0;
+let h=bk.find(k=>k.a&&s.x>=k.x-1&&s.x<=k.x+4&&s.y+5>=k.y&&s.y<=k.y+4);if(h){h.a=0;return 0}
+if(!inv&&s.x>=px&&s.x<=px+14&&s.y+5>=180&&s.y<=188){li--;inv=45;G.snd(120,.18,'sawtooth');if(li<=0)G.ov('SHIP LOST');return 0}return 1});
+G.cls(0);G.t('W:'+wv,6,3,8,8);G.t('HP:'+li,124,3,4,8);G.r(0,14,160,1,2);
+bk.map(k=>k.a&&G.r(k.x,k.y,4,4,7));
+lv.map(e=>{let c=e.r==0?11:e.r<3?8:7;G.r(e.x+2,e.y,6,5,c);G.r(e.x,e.y+2,10,3,c);
+G.r(e.x+2,e.y+2,2,2,0);G.r(e.x+6,e.y+2,2,2,0);G.r(e.x+(an?1:0),e.y+5,2,2,c);G.r(e.x+(an?7:8),e.y+5,2,2,c)});
+ps.map(s=>G.r(s.x,s.y,2,5,6));es.map(s=>G.r(s.x,s.y,2,5,5));
+if(!(inv&&((f>>2)&1))){G.r(px+5,177,4,3,9);G.r(px,180,14,6,9);G.r(px+6,175,2,2,3)}
+});`
+        },
+        {
+          id: 'columns',
+          name: 'COLUMNS',
+          isNew: false,
+          subtitle: '6×13 • Match-3+ • Chains',
+          accent: '#f5c2e7',
+          stripeBg: '#fce7f3',
+          icon: '❖',
+          controls: '◀▶ Move • ▼ Soft • A/▲ Cycle • B Drop',
+          code: `let W=6,H=13,S=14,O=14,Y=10,b=Array.from({length:H},()=>Array(W).fill(0)),
+rg=()=>[0,0,0].map(()=>4+(Math.random()*5|0)),nx=rg(),g,px,py,sc=0,gm=0,ch=0,st=0,ft=0,mk=[],t=0,ht=0;
+const sp=()=>{g=nx;nx=rg();px=2;py=2;ch=0;if(b[0][2]||b[1][2]||b[2][2])G.ov('TOWER FULL')},
+fnd=()=>{let s=new Set(),D=[[1,0],[0,1],[1,1],[1,-1]];
+for(let r=0;r<H;r++)for(let c=0;c<W;c++){let v=b[r][c];if(!v)continue;
+for(let[dc,dr]of D){let k=1;while(c+dc*k>=0&&c+dc*k<W&&r+dr*k>=0&&r+dr*k<H&&b[r+dr*k][c+dc*k]==v)k++;
+if(k>=3)for(let i=0;i<k;i++)s.add((r+dr*i)*W+(c+dc*i))}}
+mk=[...s];if(mk.length){ch++;st=1;ft=12;G.snd(340+ch*130,.12,'triangle')}else{st=0;sp()}},
+lk=()=>{for(let i=0;i<3;i++)if(py-2+i>=0)b[py-2+i][px]=g[i];fnd()};
+sp();
+G.loop(f=>{
+if(st==1){if(--ft<=0){let n=mk.length;mk.map(id=>b[id/W|0][id%W]=0);
+sc+=n*30*ch*ch;gm+=n;G.sc(sc);
+for(let c=0;c<W;c++){let col=[];for(let r=H-1;r>=0;r--)if(b[r][c])col.push(b[r][c]);
+for(let r=H-1;r>=0;r--)b[r][c]=col[H-1-r]||0}fnd()}}
+else{let mv=G.p.l?-1:G.p.r?1:0;
+if(mv)ht=0;else if(G.k.l||G.k.r){if(++ht>6&&ht%4==0)mv=G.k.l?-1:1}else ht=0;
+if(mv&&px+mv>=0&&px+mv<W&&[0,1,2].every(i=>py-i<0||!b[py-i][px+mv])){px+=mv;G.snd(210,.02)}
+if(G.p.a||G.p.u){g=[g[2],g[0],g[1]];G.snd(520,.03)}
+if(G.p.b){while(py+1<H&&!b[py+1][px]){py++;sc++}G.sc(sc);G.snd(160,.05);lk();t=0}
+else if(++t>=(G.k.d?2:Math.max(6,22-(gm/15|0)*2))){t=0;if(py+1<H&&!b[py+1][px]){py++;if(G.k.d)G.sc(++sc)}else lk()}}
+G.cls(0);G.r(O-2,Y-2,W*S+4,H*S+4,2);G.r(O,Y,W*S,H*S,0);
+const dg=(x,y,c)=>{G.r(x+1,y+1,S-2,S-2,c);G.r(x+3,y+3,4,3,3)};
+for(let r=0;r<H;r++)for(let c=0;c<W;c++)if(b[r][c])
+dg(O+c*S,Y+r*S,st==1&&mk.includes(r*W+c)&&((f>>1)&1)?3:b[r][c]);
+if(st==0)for(let i=0;i<3;i++)if(py-2+i>=0)dg(O+px*S,Y+(py-2+i)*S,g[i]);
+G.t('NEXT',112,14,3,8);G.r(114,26,22,48,2);G.r(116,28,18,44,0);
+nx.map((c,i)=>dg(118,29+i*S,c));
+G.t('GEMS',112,88,8,8);G.t(gm,112,100,3,10);
+if(ch>1)G.t(ch+'X!',112,126,6,12);
+});`
+        },
+        {
+          id: 'bomberman',
+          name: 'BOMBERMAN',
+          isNew: false,
+          subtitle: '11×11 • Cross Blasts • Stages',
+          accent: '#f38ba8',
+          stripeBg: '#ffe4e6',
+          icon: '💣',
+          controls: 'D-Pad Move • A Drop Bomb',
+          code: `let N=11,S=14,O=3,Y=24,m,px,py,bs,fl,en,sc=0,sg=1,mc=0,et=0;
+const D=[[1,0],[-1,0],[0,1],[0,-1]],
+init=()=>{m=Array.from({length:N},(_,y)=>Array.from({length:N},(_,x)=>
+x==0||y==0||x==N-1||y==N-1||(x%2==0&&y%2==0)?1:(x+y>3&&Math.random()<.44?2:0)));
+px=1;py=1;bs=[];fl=[];en=[];
+let op=[];for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)if(!m[y][x]&&x+y>=6)op.push([x,y]);
+for(let i=0;i<Math.min(7,2+sg)&&op.length;i++){let j=Math.random()*op.length|0,[x,y]=op.splice(j,1)[0];en.push({x,y,d:Math.random()*4|0})}},
+bl=(x,y)=>m[y][x]!=0||bs.some(b=>b.x==x&&b.y==y),
+boom=b=>{G.snd(110,.16,'sawtooth');fl.push({x:b.x,y:b.y,t:12});
+for(let[dx,dy]of D)for(let k=1;k<=2;k++){let nx=b.x+dx*k,ny=b.y+dy*k;if(m[ny][nx]==1)break;
+fl.push({x:nx,y:ny,t:12});let ob=bs.find(q=>q.t>1&&q.x==nx&&q.y==ny);if(ob)ob.t=1;
+if(m[ny][nx]==2){m[ny][nx]=0;sc+=10;G.sc(sc);break}}};
+init();
+G.loop(f=>{
+let dx=G.p.r?1:G.p.l?-1:0,dy=G.p.d?1:G.p.u?-1:0;
+if(dx||dy)mc=5;else if(--mc<=0&&(G.k.r||G.k.l||G.k.d||G.k.u)){dx=G.k.r?1:G.k.l?-1:0;dy=dx?0:G.k.d?1:G.k.u?-1:0;mc=5}
+if((dx||dy)&&!bl(px+dx,py+dy)){px+=dx;py+=dy;G.snd(190,.02)}
+if(G.p.a&&bs.length<2&&!bs.some(b=>b.x==px&&b.y==py)){bs.push({x:px,y:py,t:60});G.snd(300,.05)}
+bs.map(b=>b.t--);let ex=bs.filter(b=>b.t<=0);bs=bs.filter(b=>b.t>0);ex.map(boom);
+fl=fl.filter(q=>--q.t>0);
+if(++et>=Math.max(7,15-sg)){et=0;en.map(e=>{
+let ok=D.map(([a,d],i)=>({a,d,i})).filter(v=>!bl(e.x+v.a,e.y+v.d));
+let cur=ok.find(v=>v.i==e.d);
+let ch=cur&&Math.random()<.72?cur:ok[Math.random()*ok.length|0];
+if(ch){e.x+=ch.a;e.y+=ch.d;e.d=ch.i}})}
+en=en.filter(e=>{if(fl.some(q=>q.x==e.x&&q.y==e.y)){sc+=100;G.sc(sc);G.snd(620,.08);return 0}return 1});
+if(fl.some(q=>q.x==px&&q.y==py))return G.ov('BLASTED!');
+if(en.some(e=>e.x==px&&e.y==py))return G.ov('CAUGHT!');
+if(!en.length){sc+=300*sg;G.sc(sc);sg++;G.snd(880,.18,'triangle');init();return}
+G.cls(0);G.t('STG:'+sg,6,6,8,8);G.t('ENM:'+en.length,64,6,4,8);G.t('B:'+(2-bs.length),126,6,6,8);
+for(let y=0;y<N;y++)for(let x=0;x<N;x++){let v=m[y][x],X=O+x*S,T=Y+y*S;
+if(v==1){G.r(X,T,S,S,2);G.r(X+1,T+1,S-3,S-3,3)}else if(v==2){G.r(X+1,T+1,S-2,S-2,5);G.r(X+1,T+6,S-2,1,0);G.r(X+6,T+1,1,6,0)}}
+bs.map(b=>{let p=(b.t<18&&(f>>1)&1)?4:10,X=O+b.x*S,T=Y+b.y*S;G.r(X+2,T+3,10,9,p);G.r(X+6,T+1,3,2,6)});
+fl.map(q=>G.r(O+q.x*S+1,Y+q.y*S+1,S-2,S-2,(q.t&2)?6:5));
+en.map(e=>{let X=O+e.x*S,T=Y+e.y*S;G.r(X+2,T+2,10,10,4);G.r(X+4,T+4,2,2,3);G.r(X+8,T+4,2,2,3)});
+G.r(O+px*S+2,Y+py*S+2,10,10,8);G.r(O+px*S+4,Y+py*S+4,2,2,0);G.r(O+px*S+8,Y+py*S+4,2,2,0);
+});`
+        },
+        {
+          id: 'custom',
+          name: 'CUSTOM CART',
+          isNew: false,
+          isCustom: true,
+          subtitle: 'Write Your Own G-API Game',
+          accent: '#fab387',
+          stripeBg: '#ffedd5',
+          icon: '★',
+          controls: 'D-Pad Move • A Chime',
+          code: `// Custom Cartridge — Edit & Click "Apply & Re-Encode"
+let x=74,y=94,sc=0,cx=36,cy=44;
+G.loop(f=>{
+  if(G.k.l&&x>4)x-=3; if(G.k.r&&x<146)x+=3;
+  if(G.k.u&&y>18)y-=3; if(G.k.d&&y<186)y+=3;
+  if(G.p.a)G.snd(540,.05,'triangle');
+  if(Math.abs(x-cx)<12&&Math.abs(y-cy)<12){
+    sc+=10; G.sc(sc); G.snd(760,.07);
+    cx=10+(Math.random()*136|0); cy=24+(Math.random()*156|0);
+  }
+  G.cls(0);
+  G.t('STAR COLLECTOR',28,4,8,8);
+  G.r(cx,cy,8,8,6);
+  G.r(x,y,10,10,7);
+});`
+        }
+      ];
+
+      /* =====================================================================
+         5. EXPORTABLE OFFLINE PWA SHELL FILES (EXACT 16-COLOR G-BIOS PARITY)
+      ===================================================================== */
+      const PWA_INDEX_HTML = `<!doctype html>
+<!-- QR Pocket Console | Copyright (c) 2026 NazreenNasyuha | MIT License -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#11121c">
+<link rel="manifest" href="./manifest.json">
+<title>QR Pocket Console</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:#141622;color:#cdd6f4;font-family:monospace;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.con{width:min(96vw,360px);background:linear-gradient(165deg,#2b2e45,#151724);border:1px solid #2e3148;border-radius:26px;padding:14px;box-shadow:0 22px 50px #000}
+.bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px;font-weight:700}
+.bar .sc{background:#11121c;border:1px solid #2e3148;padding:3px 8px;border-radius:6px;color:#f9e2af}
+.bar button{background:#25273b;color:#cdd6f4;border:1px solid #45475a;border-radius:7px;padding:4px 8px;font:700 11px monospace;cursor:pointer}
+.lcd{background:#0e1019;padding:8px;border-radius:14px;border:1px solid #25273b;margin-bottom:14px}
+canvas{display:block;width:100%;aspect-ratio:160/200;max-height:52vh;margin:auto;background:#11121c;border-radius:6px;image-rendering:pixelated;image-rendering:crisp-edges}
+.ctl{display:flex;align-items:center;justify-content:space-between;padding:2px 6px}
+.dp{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px}
+.dp button{background:#2d3047;color:#cdd6f4;border:1px solid #45475a;border-radius:10px;font:700 16px monospace;box-shadow:0 4px 0 #10121d;touch-action:none}
+.dp button:active,.dp button.on{transform:translateY(3px);box-shadow:0 1px 0 #10121d;border-color:#89dceb}
+.ab{display:flex;gap:14px;align-items:center}
+.ab button{width:56px;height:56px;border-radius:50%;border:1px solid rgba(255,255,255,.25);font:700 16px monospace;color:#11121c;touch-action:none}
+.ab .a{background:#f38ba8;box-shadow:0 5px 0 #7b2d46;transform:translateY(-14px)}
+.ab .b{background:#fab387;box-shadow:0 5px 0 #7d4425;transform:translateY(14px)}
+.ab .a:active,.ab .a.on{transform:translateY(-10px);box-shadow:0 1px 0 #7b2d46}
+.ab .b:active,.ab .b.on{transform:translateY(18px);box-shadow:0 1px 0 #7d4425}
+</style>
+</head>
+<body>
+<div class="con">
+  <div class="bar">
+    <span style="color:#a6e3a1">● QR-POCKET</span>
+    <span class="sc">SC <span id="sc">0</span></span>
+    <div>
+      <button id="mt">🔊</button>
+      <button id="rs">RST</button>
+    </div>
+  </div>
+  <div class="lcd"><canvas id="cv" width="160" height="200"></canvas></div>
+  <div class="ctl">
+    <div class="dp">
+      <div></div><button data-k="u">▲</button><div></div>
+      <button data-k="l">◀</button><div></div><button data-k="r">▶</button>
+      <div></div><button data-k="d">▼</button><div></div>
+    </div>
+    <div class="ab">
+      <button class="b" data-k="b">B</button>
+      <button class="a" data-k="a">A</button>
+    </div>
+  </div>
+</div>
+<script>
+(()=>{
+const cv=document.getElementById('cv'),c=cv.getContext('2d'),scEl=document.getElementById('sc'),
+pal=['#11121c','#1c1f30','#45475a','#e6edf7','#f38ba8','#fab387','#f9e2af','#a6e3a1','#89dceb','#89b4fa','#cba6f7','#f5c2e7','#5eead4','#ff6b81','#38bdf8','#313244'],
+k={u:0,d:0,l:0,r:0,a:0,b:0},p={u:0,d:0,l:0,r:0,a:0,b:0};
+let ac,mu=0,lp,rf,fr=0,acc=0,lt=0,sc=0,ov=0,om='',ol=0,cur='';
+const au=()=>{if(mu)return;try{if(!ac)ac=new(AudioContext||webkitAudioContext)();if(ac.state=='suspended')ac.resume()}catch(e){}return ac};
+const G={c,W:160,H:200,pal,k,p,
+cls(cl=0){G.r(0,0,160,200,cl)},
+r(x,y,w,h,cl){c.fillStyle=typeof cl=='number'?pal[cl]||pal[3]:cl;c.fillRect(x|0,y|0,w|0,h|0)},
+t(s,x,y,cl=3,sz=8){c.fillStyle=typeof cl=='number'?pal[cl]||pal[3]:cl;c.font='bold '+(sz||8)+'px monospace';c.textBaseline='top';c.fillText(String(s),x|0,y|0)},
+snd(f,d=.06,tp='square'){if(mu||!f)return;let a=au();if(!a)return;try{let n=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=tp||'square';o.frequency.setValueAtTime(f,n);g.gain.setValueAtTime(.065,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g);g.connect(a.destination);o.start(n);o.stop(n+d+.01)}catch(e){}},
+sc(n){sc=n|0;scEl.textContent=sc},
+ov(m='GAME OVER'){if(ov)return;ov=1;om=String(m||'GAME OVER');ol=12;G.snd(150,.22,'sawtooth')},
+loop(fn){lp=fn}};
+const clrP=()=>{p.u=p.d=p.l=p.r=p.a=p.b=0};
+const drawOv=()=>{c.fillStyle='rgba(17,18,28,.84)';c.fillRect(10,60,140,80);G.r(10,60,140,2,4);G.r(10,138,140,2,4);
+G.t('GAME OVER',40,70,4,12);if(om&&om!='GAME OVER')G.t(om.slice(0,24),Math.max(14,(160-om.length*5)>>1),88,6,8);
+G.t('SCORE: '+sc,44,104,3,8);if(ol<=0&&((fr>>3)&1))G.t('A / B TO REBOOT',32,122,7,8)};
+const tick=ts=>{if(!lt)lt=ts;acc+=Math.min(ts-lt,100);lt=ts;let n=0;
+while(acc>=1000/30&&n<2){acc-=1000/30;n++;
+if(ov){if(ol>0)ol--;else if(p.a||p.b){clrP();boot(cur);return}drawOv()}
+else if(lp){try{lp(fr)}catch(e){cancelAnimationFrame(rf);G.cls(0);G.t('CART ERR',44,86,4,12);return}}
+fr++;clrP()}rf=requestAnimationFrame(tick)};
+const boot=code=>{cancelAnimationFrame(rf);cur=code;fr=acc=lt=ov=ol=0;om='';lp=null;
+for(let i in k)k[i]=p[i]=0;G.sc(0);G.cls(0);
+try{new Function('G',code)(G);rf=requestAnimationFrame(tick)}catch(e){G.t('CART ERROR',34,82,4,12)}};
+const dec=async h=>{const MAX=32768;if(h.startsWith('#d.')){let s=h.slice(3).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';
+let b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+let ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(u);w.close();
+let rd=ds.readable.getReader(),ch=[],n=0;while(1){let{value:v,done:d}=await rd.read();if(d)break;n+=v.byteLength;if(n>MAX){await rd.cancel();throw Error('TOO BIG')}ch.push(v)}
+let o=new Uint8Array(n),k=0;for(let v of ch){o.set(v,k);k+=v.byteLength}return new TextDecoder().decode(o)}
+if(h.startsWith('#r.')){let t=decodeURIComponent(h.slice(3));if(new TextEncoder().encode(t).length>MAX)throw Error('TOO BIG');return t}return ''};
+const load=async()=>{let h=location.hash;if(!h){cancelAnimationFrame(rf);G.cls(0);
+G.t('QR POCKET',36,52,8,14);G.t('OFFLINE READY',32,82,7,10);G.t('SCAN ANY PRINTED',22,114,3,8);G.t('QR GAME CARTRIDGE',18,128,6,8);return}
+try{boot(await dec(h))}catch(e){G.cls(0);G.t('BAD QR HASH',30,88,4,12)}};
+const set=(btn,dn)=>{if(!(btn in k))return;if(dn){au();if(!k[btn])p[btn]=1;k[btn]=1}else k[btn]=0};
+document.querySelectorAll('[data-k]').forEach(el=>{let b=el.dataset.k;
+el.addEventListener('pointerdown',e=>{e.preventDefault();if(el.setPointerCapture)try{el.setPointerCapture(e.pointerId)}catch(_){}el.classList.add('on');set(b,1)});
+const off=()=>{el.classList.remove('on');set(b,0)};
+el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off)});
+addEventListener('blur',()=>{for(let i in k)k[i]=p[i]=0});
+const km={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d',KeyZ:'a',Space:'a',Enter:'a',KeyX:'b',ShiftLeft:'b',ShiftRight:'b'};
+addEventListener('keydown',e=>{if(e.code=='KeyR')return cur&&boot(cur);let b=km[e.code];if(b){e.preventDefault();set(b,1)}});
+addEventListener('keyup',e=>{let b=km[e.code];if(b)set(b,0)});
+document.getElementById('mt').onclick=e=>{mu^=1;e.target.textContent=mu?'🔇':'🔊';if(!mu)G.snd(660,.05,'triangle')};
+document.getElementById('rs').onclick=()=>cur&&boot(cur);
+addEventListener('hashchange',load);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+load();
+})();
+<\/script>
+</body>
+</html>`;
+
+      const PWA_SW_JS = `/* QR Pocket Console Service Worker | Copyright (c) 2026 NazreenNasyuha | MIT License */
+const CACHE = 'qr-pocket-6game-v1';
+const ASSETS = ['./', './index.html', './manifest.json'];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    caches.match(e.request, { ignoreSearch: true }).then((cached) => {
+      if (cached) return cached;
+      return fetch(e.request).catch(() => caches.match('./index.html'));
+    })
+  );
+});`;
+
+      const PWA_MANIFEST_JSON = `{
+  "name": "QR Pocket Console",
+  "short_name": "QR Pocket",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#141622",
+  "theme_color": "#11121c",
+  "description": "Zero-game-code Offline PWA micro-console shell that boots games stored inside QR URL hashes."
+}`;
+
+      /* =====================================================================
+         6. STUDIO STATE, QR RENDERING & TELEMETRY
+      ===================================================================== */
+      const cartridges = CARTRIDGE_CATALOG.map((c) => ({
+        ...c,
+        defaultCode: c.code,
+        hash: '',
+        rawBytes: 0,
+        payloadBytes: 0,
+        totalBytes: 0,
+        qrVersion: 0,
+        qrModules: 0
+      }));
+
+      let activeId = 'snake'; // Default selected: SNAKE (NEW)
+      let eccLevel = 'L';
+      let baseUrl = 'https://your-site.github.io/qr-arcade/';
+
+      function getActiveCart() {
+        return cartridges.find((c) => c.id === activeId) || cartridges[0];
+      }
+
+      function getCleanBaseUrl() {
+        const fallback = 'https://your-site.github.io/qr-arcade/';
+        const clean = String(baseUrl || '').trim();
+        if (!clean) return fallback;
+        try {
+          const parsed = new URL(clean);
+          if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+            return clean;
+          }
+        } catch (_) {}
+        return fallback;
+      }
+
+      function getScanRating(totalBytes) {
+        if (totalBytes < 900) {
+          return { label: 'Easy Scan', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/40' };
+        }
+        if (totalBytes < 1400) {
+          return { label: 'Good Scan', cls: 'bg-amber-500/15 text-amber-200 border-amber-400/40' };
+        }
+        return { label: 'Dense', cls: 'bg-rose-500/15 text-rose-300 border-rose-400/40' };
+      }
+
+      // Render pure #000000 on #FFFFFF QR code with generous 4-module quiet zone
+      function renderQRToCanvas(canvas, text, ecc = 'L', targetSize = 216) {
+        if (!canvas) return { version: 0, modules: 0, ok: false };
+        const ctx = canvas.getContext('2d');
+
+        if (typeof window.qrcode !== 'function') {
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, targetSize, targetSize);
+          ctx.fillStyle = '#11121c';
+          ctx.font = 'bold 12px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('QR Lib Offline', targetSize / 2, targetSize / 2);
+          return { version: 0, modules: 0, ok: false };
+        }
+
+        try {
+          const qr = window.qrcode(0, ecc);
+          qr.addData(text, 'Byte');
+          qr.make();
+
+          const mods = qr.getModuleCount();
+          const version = Math.max(1, Math.round((mods - 17) / 4));
+          const quiet = 4; // 4-module quiet zone for instant mobile camera focus
+          const totalCells = mods + quiet * 2;
+          const scale = Math.max(2, Math.floor((targetSize * 2) / totalCells));
+          const dim = totalCells * scale;
+
+          canvas.width = dim;
+          canvas.height = dim;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, dim, dim);
+
+          ctx.fillStyle = '#000000';
+          for (let r = 0; r < mods; r++) {
+            for (let c = 0; c < mods; c++) {
+              if (qr.isDark(r, c)) {
+                ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+              }
+            }
+          }
+          return { version, modules: mods, ok: true };
+        } catch (_) {
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, targetSize, targetSize);
+          ctx.fillStyle = '#c95d7e';
+          ctx.font = 'bold 12px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('Exceeds QR Max', targetSize / 2, targetSize / 2);
+          return { version: 40, modules: 177, ok: false };
+        }
+      }
+
+      async function computeCartMetrics(cart) {
+        const enc = new TextEncoder();
+        cart.rawBytes = enc.encode(cart.code).length;
+        cart.hash = await encodeToHash(cart.code);
+        cart.payloadBytes = enc.encode(cart.hash).length;
+        const fullUrl = getCleanBaseUrl() + cart.hash;
+        cart.totalBytes = enc.encode(fullUrl).length;
+
+        if (typeof window.qrcode === 'function') {
+          try {
+            const qr = window.qrcode(0, eccLevel);
+            qr.addData(fullUrl, 'Byte');
+            qr.make();
+            cart.qrModules = qr.getModuleCount();
+            cart.qrVersion = Math.max(1, Math.round((cart.qrModules - 17) / 4));
+          } catch (_) {
+            cart.qrModules = 0;
+            cart.qrVersion = 0;
+          }
+        }
+      }
+
+      async function recomputeAll() {
+        await Promise.all(cartridges.map(computeCartMetrics));
+        renderSelectorBay();
+        renderLiveQRPanel();
+        renderPrintSheet();
+      }
+
+      /* =====================================================================
+         7. ROUND-TRIP HASH BOOT (Compress -> #d.<payload> -> Decompress -> Run)
+      ===================================================================== */
+      async function selectAndBootCart(id, notify = true) {
+        activeId = id;
+        const cart = getActiveCart();
+        await computeCartMetrics(cart);
+
+        const titleEl = document.getElementById('console-title');
+        titleEl.textContent = cart.name;
+        titleEl.style.color = cart.accent;
+        document.getElementById('console-controls-bar').textContent = cart.controls;
+        document.getElementById('code-editor-textarea').value = cart.code;
+        document.getElementById('code-error-banner').classList.add('hidden');
+
+        // Auto-expand editor if Custom Cart is picked
+        if (cart.isCustom) {
+          document.getElementById('editor-drawer').classList.remove('hidden');
+          document.getElementById('editor-chevron').style.transform = 'rotate(180deg)';
+        }
+
+        renderSelectorBay();
+        renderLiveQRPanel();
+
+        const hashBadge = document.getElementById('console-hash-badge');
+        const errBanner = document.getElementById('code-error-banner');
+
+        try {
+          // True round-trip verification: boot the decompressed QR hash payload!
+          const decodedSource = await decodeFromHash(cart.hash);
+          const ok = BIOS.boot(decodedSource, (err) => {
+            if (err) {
+              errBanner.textContent = 'Syntax / Runtime Error: ' + (err.message || err);
+              errBanner.classList.remove('hidden');
+              hashBadge.textContent = '● CART ERROR';
+              hashBadge.className = 'text-rose-400 font-bold';
+            } else {
+              errBanner.classList.add('hidden');
+              hashBadge.textContent = '● BOOT FROM HASH';
+              hashBadge.className = 'text-emerald-300 font-bold';
+            }
+          });
+
+          if (ok && notify) {
+            showToast(`Booted ${cart.name} from QR hash (${cart.totalBytes} B, v${cart.qrVersion})`, 'cyan');
+          }
+        } catch (err) {
+          hashBadge.textContent = '● DECODE ERR';
+          hashBadge.className = 'text-rose-400 font-bold';
+          errBanner.textContent = 'Decode Error: ' + (err.message || err);
+          errBanner.classList.remove('hidden');
+          showToast('Failed to decode QR payload.', 'rose');
+        }
+      }
+
+      /* =====================================================================
+         8. UI RENDERERS: CARTRIDGE BAY, LIVE QR PANEL, 2x3 PRINT SHEET, PWA TAB
+      ===================================================================== */
+      function renderSelectorBay() {
+        const grid = document.getElementById('cartridge-selector-grid');
+        grid.innerHTML = '';
+
+        cartridges.forEach((cart) => {
+          const isSelected = cart.id === activeId;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'cart-pill relative text-left rounded-xl p-2.5 border flex flex-col justify-between gap-1.5 cursor-pointer ' +
+            (isSelected
+              ? 'bg-studioDeep shadow-lg'
+              : 'bg-studioDeep/60 border-studioBorder/80 hover:border-studioText/30');
+
+          if (isSelected) {
+            btn.style.borderColor = cart.accent;
+            btn.style.boxShadow = `0 0 0 1px ${cart.accent}55, 0 8px 20px rgba(0,0,0,0.35)`;
+          }
+
+          btn.innerHTML = `
+            <div class="flex items-center justify-between gap-1">
+              <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0 border border-white/10"
+                style="background:${cart.accent}22;color:${cart.accent}">${cart.icon}</span>
+              ${cart.isNew
+                ? `<span class="px-1.5 py-0.5 rounded-md font-pixel text-[8px] font-bold tracking-wider text-studioDeep" style="background:${cart.accent}">NEW</span>`
+                : `<span class="font-mono text-[9px] text-studioMuted">v${cart.qrVersion || '--'}</span>`}
+            </div>
+            <div class="min-w-0">
+              <div class="font-pixel text-[10px] text-white truncate">${cart.name}</div>
+              <div class="font-mono text-[9px] text-studioMuted truncate mt-0.5">
+                ${cart.totalBytes ? `${cart.totalBytes}B • v${cart.qrVersion}` : 'Encoding…'}
+              </div>
+            </div>
+          `;
+
+          btn.addEventListener('click', () => selectAndBootCart(cart.id, true));
+          grid.appendChild(btn);
+        });
+      }
+
+      function renderLiveQRPanel() {
+        const cart = getActiveCart();
+        const fullUrl = getCleanBaseUrl() + cart.hash;
+        const canvas = document.getElementById('live-qr-canvas');
+        const res = renderQRToCanvas(canvas, fullUrl, eccLevel, 216);
+
+        if (res.ok) {
+          cart.qrVersion = res.version;
+          cart.qrModules = res.modules;
+        }
+
+        const titleSpan = document.getElementById('qr-card-title');
+        titleSpan.textContent = cart.name;
+        titleSpan.style.color = cart.accent;
+
+        const rating = getScanRating(cart.totalBytes);
+        const badge = document.getElementById('qr-rating-badge');
+        badge.textContent = rating.label;
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border ' + rating.cls;
+
+        const ratio = cart.rawBytes > 0 ? Math.round((1 - cart.payloadBytes / cart.rawBytes) * 100) : 0;
+
+        document.getElementById('stat-raw-bytes').textContent = `${cart.rawBytes} B`;
+        document.getElementById('stat-payload-bytes').textContent = `${cart.payloadBytes} B`;
+        document.getElementById('stat-total-bytes').textContent = `${cart.totalBytes} B`;
+        document.getElementById('stat-qr-version').textContent = res.ok ? `v${res.version}` : 'OVER';
+        document.getElementById('stat-qr-grid').textContent = res.ok ? `${res.modules}×${res.modules}` : 'ERR';
+        document.getElementById('stat-ratio').textContent = ratio >= 0 ? `-${ratio}%` : `+${Math.abs(ratio)}%`;
+        document.getElementById('stat-hash-preview').textContent = cart.hash;
+      }
+
+      function renderPrintSheet() {
+        const grid = document.getElementById('print-sheet-grid');
+        grid.innerHTML = '';
+
+        // All 6 built-in games in a clean 2x3 printable sheet
+        const builtIns = cartridges.filter((c) => !c.isCustom);
+        const cleanBase = getCleanBaseUrl();
+
+        builtIns.forEach((cart) => {
+          const fullUrl = cleanBase + cart.hash;
+          const card = document.createElement('article');
+          card.className = 'gb-print-card flex flex-col justify-between';
+
+          card.innerHTML = `
+            <!-- Cartridge Color Header Stripe -->
+            <div class="print-stripe px-3.5 py-2.5 border-b-2 border-slate-900 flex items-center justify-between gap-2" style="background:${cart.stripeBg}">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-7 h-7 rounded-lg bg-white border border-slate-900 flex items-center justify-center text-sm shrink-0">${cart.icon}</span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="font-pixel text-xs font-bold text-slate-950 truncate">${cart.name}</h3>
+                    ${cart.isNew ? '<span class="px-1 py-0.5 rounded bg-slate-900 text-white font-pixel text-[7px]">NEW</span>' : ''}
+                  </div>
+                  <div class="text-[9px] font-mono text-slate-700 truncate">${cart.subtitle}</div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-white font-mono text-[9px] font-bold shrink-0">
+                v${cart.qrVersion || '--'} • ${cart.totalBytes}B
+              </span>
+            </div>
+
+            <!-- Cartridge Body with Grip Ridges + Pure B/W QR -->
+            <div class="px-3.5 py-2.5 flex flex-col items-center gap-2">
+              <div class="gb-ridges h-1.5 w-full rounded-sm opacity-75"></div>
+              <div class="p-1.5 bg-white border-2 border-slate-900 rounded-xl">
+                <canvas class="print-qr-canvas pixel-canvas block w-[184px] h-[184px]"></canvas>
+              </div>
+              <div class="w-full text-[10px] font-mono font-bold text-slate-900 text-center bg-slate-100 border border-slate-300 rounded-lg py-1 px-2">
+                ${cart.controls}
+              </div>
+            </div>
+
+            <!-- Footer Spec Strip -->
+            <div class="px-3.5 py-1.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[8.5px] font-mono text-slate-600 gap-2">
+              <span class="print-base-url truncate"></span>
+              <span class="shrink-0 font-bold text-slate-900">${cart.qrModules ? `${cart.qrModules}×${cart.qrModules}` : '--'} • ECC-${eccLevel}</span>
+            </div>
+          `;
+
+          card.querySelector('.print-base-url').textContent = cleanBase;
+          grid.appendChild(card);
+          const qCanvas = card.querySelector('.print-qr-canvas');
+          renderQRToCanvas(qCanvas, fullUrl, eccLevel, 220);
+        });
+      }
+
+      function renderPWADeployTab() {
+        const container = document.getElementById('pwa-files-list');
+        const enc = new TextEncoder();
+        const shellBytes = enc.encode(PWA_INDEX_HTML).length;
+        document.getElementById('pwa-shell-size-pill').textContent = `index.html Shell: ${(shellBytes / 1024).toFixed(2)} KB (${shellBytes} B)`;
+
+        const files = [
+          {
+            name: 'index.html',
+            desc: 'Zero-Game-Code Offline Handheld + 16-Color G-BIOS + #d. Decompressor',
+            mime: 'text/html;charset=utf-8',
+            color: 'text-cyan-300',
+            content: PWA_INDEX_HTML
+          },
+          {
+            name: 'sw.js',
+            desc: 'Cache-First Service Worker (caches console shell for permanent offline play)',
+            mime: 'application/javascript;charset=utf-8',
+            color: 'text-emerald-300',
+            content: PWA_SW_JS
+          },
+          {
+            name: 'manifest.json',
+            desc: 'Installable PWA Web App Manifest',
+            mime: 'application/json;charset=utf-8',
+            color: 'text-purple-300',
+            content: PWA_MANIFEST_JSON
+          }
+        ];
+
+        container.innerHTML = '';
+        files.forEach((f) => {
+          const bytes = enc.encode(f.content).length;
+          const card = document.createElement('div');
+          card.className = 'studio-panel rounded-2xl overflow-hidden';
+
+          card.innerHTML = `
+            <div class="px-4 py-3 bg-studioDeep/80 border-b border-studioBorder flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="font-mono font-bold text-sm ${f.color}">${f.name}</span>
+                <span class="text-[11px] text-studioMuted hidden sm:inline truncate">${f.desc}</span>
+                <span class="px-2 py-0.5 rounded bg-studioCard font-mono text-[10px] text-amber-200 shrink-0">${bytes} B</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button type="button" class="btn-copy-file studio-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-studioText hover:border-cyan-300/60">
+                  ⧉ Copy
+                </button>
+                <button type="button" class="btn-dl-file studio-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-300 hover:border-emerald-300/60">
+                  ⬇ Download
+                </button>
+              </div>
+            </div>
+            <pre class="p-3.5 bg-studioDeep/60 overflow-x-auto max-h-56 text-[11px] font-mono leading-relaxed text-studioText/85 m-0"><code></code></pre>
+          `;
+
+          card.querySelector('code').textContent = f.content;
+          card.querySelector('.btn-copy-file').addEventListener('click', () => copyToClipboard(f.content, `Copied ${f.name}!`));
+          card.querySelector('.btn-dl-file').addEventListener('click', () => downloadFile(f.name, f.content, f.mime));
+          container.appendChild(card);
+        });
+      }
+
+      /* =====================================================================
+         9. EVENT BINDINGS: TABS, POINTER-CAPTURED TOUCH PAD, KEYBOARD, EDITOR
+      ===================================================================== */
+      function setupTabs() {
+        const tabs = {
+          bay: document.getElementById('tab-bay'),
+          print: document.getElementById('tab-print'),
+          deploy: document.getElementById('tab-deploy')
+        };
+        const navBtns = document.querySelectorAll('.nav-tab');
+
+        navBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const target = btn.dataset.tab;
+            navBtns.forEach((b) => {
+              const on = b === btn;
+              b.classList.toggle('is-active', on);
+              b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            Object.entries(tabs).forEach(([key, sec]) => sec.classList.toggle('hidden', key !== target));
+            if (target === 'print') renderPrintSheet();
+          });
+        });
+      }
+
+      function setupHandheldControls() {
+        // Touch & Pointer D-Pad + A/B with pointer capture so holds never stick
+        document.querySelectorAll('[data-btn]').forEach((el) => {
+          const btnKey = el.dataset.btn;
+          const down = (e) => {
+            e.preventDefault();
+            if (el.setPointerCapture) {
+              try { el.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+            el.classList.add('is-active');
+            BIOS.setButton(btnKey, true);
+          };
+          const up = () => {
+            el.classList.remove('is-active');
+            BIOS.setButton(btnKey, false);
+          };
+          el.addEventListener('pointerdown', down);
+          el.addEventListener('pointerup', up);
+          el.addEventListener('pointercancel', up);
+          el.addEventListener('lostpointercapture', up);
+        });
+
+        window.addEventListener('blur', () => {
+          document.querySelectorAll('[data-btn].is-active').forEach((el) => el.classList.remove('is-active'));
+          BIOS.releaseAll();
+        });
+
+        // Keyboard controls (Arrows/WASD, Z/Space/Enter=A, X/Shift=B, R=Reset)
+        const keyMap = {
+          ArrowLeft: 'l', KeyA: 'l',
+          ArrowRight: 'r', KeyD: 'r',
+          ArrowUp: 'u', KeyW: 'u',
+          ArrowDown: 'd', KeyS: 'd',
+          KeyZ: 'a', Space: 'a', Enter: 'a',
+          KeyX: 'b', ShiftLeft: 'b', ShiftRight: 'b'
+        };
+
+        window.addEventListener('keydown', (e) => {
+          const tag = document.activeElement && document.activeElement.tagName;
+          if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+          if (e.code === 'KeyR') {
+            e.preventDefault();
+            BIOS.reset();
+            showToast('Cartridge reset', 'cyan');
+            return;
+          }
+          const btn = keyMap[e.code];
+          if (btn) {
+            e.preventDefault();
+            BIOS.setButton(btn, true);
+          }
+        });
+
+        window.addEventListener('keyup', (e) => {
+          const btn = keyMap[e.code];
+          if (btn) BIOS.setButton(btn, false);
+        });
+
+        document.getElementById('btn-mute').addEventListener('click', () => {
+          const isMuted = BIOS.toggleMute();
+          document.getElementById('mute-icon').textContent = isMuted ? '🔇' : '🔊';
+          showToast(isMuted ? 'Audio muted' : 'Audio enabled', 'cyan');
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+          BIOS.reset();
+          showToast('Cartridge reset', 'cyan');
+        });
+      }
+
+      function setupStudioControls() {
+        // Base URL live updates
+        const urlInput = document.getElementById('base-url-input');
+        let urlDebounce = null;
+        urlInput.addEventListener('input', () => {
+          baseUrl = urlInput.value;
+          clearTimeout(urlDebounce);
+          urlDebounce = setTimeout(() => recomputeAll(), 150);
+        });
+
+        // ECC L / M toggle
+        const eccBtns = document.querySelectorAll('.ecc-btn');
+        eccBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            eccLevel = btn.dataset.ecc;
+            eccBtns.forEach((b) => {
+              const active = b === btn;
+              b.className = active
+                ? 'ecc-btn px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold bg-cyan-400/20 text-cyan-200 border border-cyan-300/40'
+                : 'ecc-btn px-2.5 py-1 rounded-lg font-mono text-[11px] text-studioMuted hover:text-white';
+            });
+            recomputeAll();
+            showToast(`QR Error Correction set to Level ${eccLevel}`, 'cyan');
+          });
+        });
+
+        // Export QR PNG
+        document.getElementById('btn-download-png').addEventListener('click', () => {
+          const canvas = document.getElementById('live-qr-canvas');
+          const cart = getActiveCart();
+          try {
+            const dataUrl = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `qr-cart-${cart.id}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast(`Saved qr-cart-${cart.id}.png`, 'emerald');
+          } catch (_) {
+            showToast('PNG export blocked by browser sandbox.', 'amber');
+          }
+        });
+
+        // Copy Full QR URL
+        document.getElementById('btn-copy-url').addEventListener('click', () => {
+          const cart = getActiveCart();
+          copyToClipboard(getCleanBaseUrl() + cart.hash, `Copied ${cart.name} full QR URL!`);
+        });
+
+        // Copy Compressed Payload Only (#d....)
+        document.getElementById('btn-copy-payload').addEventListener('click', () => {
+          const cart = getActiveCart();
+          copyToClipboard(cart.hash, `Copied ${cart.name} #d. payload (${cart.payloadBytes} B)!`);
+        });
+
+        // Re-boot via hash button
+        document.getElementById('btn-boot-hash').addEventListener('click', () => {
+          selectAndBootCart(activeId, true);
+        });
+
+        // Live Minified Code Editor
+        const drawer = document.getElementById('editor-drawer');
+        const chevron = document.getElementById('editor-chevron');
+        document.getElementById('btn-toggle-editor').addEventListener('click', () => {
+          const hidden = drawer.classList.toggle('hidden');
+          chevron.style.transform = hidden ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
+        const editorTextarea = document.getElementById('code-editor-textarea');
+        let codeTimer = null;
+        editorTextarea.addEventListener('input', () => {
+          const cart = getActiveCart();
+          cart.code = editorTextarea.value;
+          clearTimeout(codeTimer);
+          codeTimer = setTimeout(async () => {
+            await computeCartMetrics(cart);
+            renderSelectorBay();
+            renderLiveQRPanel();
+          }, 200);
+        });
+
+        document.getElementById('btn-apply-encode').addEventListener('click', async () => {
+          const cart = getActiveCart();
+          cart.code = editorTextarea.value;
+          await selectAndBootCart(cart.id, true);
+        });
+
+        document.getElementById('btn-reset-code').addEventListener('click', async () => {
+          const cart = getActiveCart();
+          cart.code = cart.defaultCode;
+          editorTextarea.value = cart.code;
+          await selectAndBootCart(cart.id, true);
+          showToast(`Restored default ${cart.name} code`, 'amber');
+        });
+
+        // Print 2x3 Cartridge Sheet
+        document.getElementById('btn-print-sheet').addEventListener('click', () => {
+          renderPrintSheet();
+          window.print();
+        });
+      }
+
+      /* =====================================================================
+         10. BOOTSTRAP ON WINDOW LOAD
+      ===================================================================== */
+      window.addEventListener('load', async () => {
+        setupTabs();
+        setupHandheldControls();
+        setupStudioControls();
+        renderPWADeployTab();
+
+        await recomputeAll();
+
+        // If Studio itself is opened with a #d. or #r. QR hash, load it into Custom Cart for review (never auto-execute untrusted URL code)
+        if (window.location.hash && (window.location.hash.startsWith('#d.') || window.location.hash.startsWith('#r.'))) {
+          try {
+            const incoming = await decodeFromHash(window.location.hash);
+            const custom = cartridges.find((c) => c.id === 'custom');
+            if (custom) {
+              custom.code = incoming;
+              activeId = 'custom';
+              await computeCartMetrics(custom);
+              const titleEl = document.getElementById('console-title');
+              titleEl.textContent = custom.name;
+              titleEl.style.color = custom.accent;
+              document.getElementById('console-controls-bar').textContent = custom.controls;
+              document.getElementById('code-editor-textarea').value = custom.code;
+              document.getElementById('editor-drawer').classList.remove('hidden');
+              document.getElementById('editor-chevron').style.transform = 'rotate(180deg)';
+              const errBanner = document.getElementById('code-error-banner');
+              errBanner.textContent = 'External QR hash loaded into Custom Cart. Review the code above and click "Apply & Re-Encode" to run it.';
+              errBanner.classList.remove('hidden');
+              const hashBadge = document.getElementById('console-hash-badge');
+              hashBadge.textContent = '● REVIEW BEFORE RUN';
+              hashBadge.className = 'text-amber-300 font-bold';
+              renderSelectorBay();
+              renderLiveQRPanel();
+              showToast('External QR payload loaded — review code before running.', 'amber');
+              return;
+            }
+          } catch (_) {
+            // Fall back to default Snake cartridge
+          }
+        }
+
+        // Default boot: SNAKE (NEW) via live deflate-raw -> inflate-raw round-trip
+        await selectAndBootCart('snake', false);
+      });
+    })();
+  </script>
+</body>
+</html>

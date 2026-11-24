@@ -1,0 +1,85 @@
+# =============================================================================
+# QR Cartridge Arcade — Git Ignore Rules
+# Copyright (c) 2026 NazreenNasyuha | MIT License
+# =============================================================================
+
+# --- Secrets, Credentials & Environment Files ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+secrets.*
+credentials.json
+service-account*.json
+
+# --- Operating System Artifacts ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*~
+
+# --- Editors & IDEs ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# --- Node, Build & Package Tooling (if modularized later) ---
+node_modules/
+jspm_packages/
+dist/
+build/
+out/
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+.eslintcache
+.stylelintcache
+
+# --- Logs, Coverage & Temporary Files ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+coverage/
+.nyc_output/
+*.tmp
+*.temp
+*.bak
+*.orig
+tmp/
+scratch/
+
+# --- Local Studio Export Artifacts ---
+# Keep exported PNG QR cards and test print PDFs out of version control
+qr-cart-*.png
+*-print-sheet.pdf
