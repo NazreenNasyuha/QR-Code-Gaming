@@ -13,12 +13,6 @@ Once GitHub Pages is enabled on `main` (`/` root):
 - **Offline QR Pocket Console (QR scan target)**: `https://nazreennasyuha.github.io/QR-Code-Gaming/`
 - **6-Game QR Cartridge Studio & Print Sheet**: `https://nazreennasyuha.github.io/QR-Code-Gaming/QR%20Gaming.html`
 
-### Enable GitHub Pages (1-Time Setup)
-1. Open **Settings → Pages** in this repository.
-2. Under **Build and deployment → Source**, choose **Deploy from a branch**.
-3. Select Branch **`main`** and Folder **`/ (root)`**, then click **Save**.
-4. Wait ~1 minute, open the Studio URL, print the **2×3 Cartridge Sheet**, and scan any card on your phone — after one scan, `sw.js` caches the console shell so all printed QR cartridges launch in Airplane Mode.
-
 ---
 
 ## Built-In Cartridges (16-Color `160×200` @ `30 FPS` G-BIOS)
