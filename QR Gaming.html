@@ -535,8 +535,8 @@
                     Base Offline PWA URL <span class="text-studioMuted font-normal">(updates all 6 QR codes live)</span>
                   </label>
                   <div class="flex gap-1.5">
-                    <input id="base-url-input" type="url" value="https://your-site.github.io/qr-arcade/"
-                      placeholder="https://your-site.github.io/qr-arcade/"
+                    <input id="base-url-input" type="url" value="https://nazreennasyuha.github.io/QR-Code-Gaming/"
+                      placeholder="https://nazreennasyuha.github.io/QR-Code-Gaming/"
                       class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-studioDeep border border-studioBorder focus:border-cyan-300 focus:outline-none text-xs font-mono text-cyan-200 placeholder-studioMuted" />
                     <div class="inline-flex rounded-xl bg-studioDeep border border-studioBorder p-0.5 shrink-0" role="group" aria-label="QR Error Correction">
                       <button type="button" data-ecc="L" class="ecc-btn px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold bg-cyan-400/20 text-cyan-200 border border-cyan-300/40">L</button>
@@ -668,7 +668,7 @@
           <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
             <div class="font-pixel text-xs text-emerald-300 mb-1.5">1. HOST 3 TINY FILES</div>
             <p class="text-xs text-studioText/85 leading-relaxed">
-              Download <code class="font-mono text-amber-200">index.html</code>, <code class="font-mono text-amber-200">sw.js</code>, and <code class="font-mono text-amber-200">manifest.json</code> below and push them to a free GitHub Pages repository (e.g. <code class="font-mono text-cyan-300">qr-arcade</code>).
+              Download <code class="font-mono text-amber-200">index.html</code>, <code class="font-mono text-amber-200">sw.js</code>, and <code class="font-mono text-amber-200">manifest.json</code> below and push them to a free GitHub Pages repository (e.g. <code class="font-mono text-cyan-300">QR-Code-Gaming</code>).
             </p>
           </div>
           <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
@@ -1523,14 +1523,14 @@ self.addEventListener('fetch', (e) => {
 
       let activeId = 'snake'; // Default selected: SNAKE (NEW)
       let eccLevel = 'L';
-      let baseUrl = 'https://your-site.github.io/qr-arcade/';
+      let baseUrl = 'https://nazreennasyuha.github.io/QR-Code-Gaming/';
 
       function getActiveCart() {
         return cartridges.find((c) => c.id === activeId) || cartridges[0];
       }
 
       function getCleanBaseUrl() {
-        const fallback = 'https://your-site.github.io/qr-arcade/';
+        const fallback = 'https://nazreennasyuha.github.io/QR-Code-Gaming/';
         const clean = String(baseUrl || '').trim();
         if (!clean) return fallback;
         try {

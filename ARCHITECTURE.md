@@ -15,8 +15,8 @@
   - **Styling & Typography (Studio only)**: Tailwind CSS Play CDN + Google Fonts (`Inter`, `JetBrains Mono`, `Silkscreen`). The exported Offline PWA shell has **zero external dependencies**.
   - **QR Encoding (Studio only)**: `qrcode-generator@1.4.4` (Type 0 auto-version, Byte mode, ECC `L` / `M`).
 - **Entry Points**:
-  - [`QR Gaming.html`](QR%20Gaming.html) — Complete interactive Studio, live handheld console, QR telemetry generator, live code editor, printable 2×3 sheet generator, and Offline PWA exporter.
-  - **Exported PWA Bundle** (generated inside Tab 3 of `QR Gaming.html` for GitHub Pages deployment): `index.html` (~7.5 KB standalone BIOS shell), `sw.js` (cache-first Service Worker), `manifest.json` (installable PWA manifest).
+  - [`QR Gaming.html`](QR%20Gaming.html) — Complete interactive Studio, live handheld console, QR telemetry generator, live code editor, printable 2×3 sheet generator, and Offline PWA exporter (pre-configured for `https://nazreennasyuha.github.io/QR-Code-Gaming/`).
+  - [`index.html`](index.html), [`sw.js`](sw.js), [`manifest.json`](manifest.json) — Deployed root Offline PWA shell (~7.5 KB zero-game-code BIOS shell + cache-first Service Worker + Web App Manifest) with exact 1:1 parity to the Tab 3 exporter in `QR Gaming.html`.
 
 ---
 
@@ -24,11 +24,16 @@
 
 ```text
 QR Code Gaming/
+├── .gitattributes           # Line-ending normalization rules
 ├── .gitignore               # Secret, OS, IDE, build, and local export exclusions
 ├── AGENTS.md                # Team engineering standards, invariants, and security guardrails
 ├── ARCHITECTURE.md          # Living architecture specification (single source of truth)
 ├── LICENSE                  # MIT License — Copyright (c) 2026 NazreenNasyuha
-└── QR Gaming.html           # Self-contained Studio, 16-color G-BIOS, 6+1 cartridges & PWA exporter
+├── README.md                # GitHub repository overview & GitHub Pages setup guide
+├── QR Gaming.html           # Self-contained Studio, 16-color G-BIOS, 6+1 cartridges & PWA exporter
+├── index.html               # Standalone zero-game-code Offline QR Pocket Console (GitHub Pages root)
+├── sw.js                    # Cache-first Service Worker for Airplane Mode offline play
+└── manifest.json            # Installable PWA Web App Manifest
 ```
 
 ---

@@ -1,0 +1,9 @@
+{
+  "name": "QR Pocket Console",
+  "short_name": "QR Pocket",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#141622",
+  "theme_color": "#11121c",
+  "description": "Zero-game-code Offline PWA micro-console shell that boots games stored inside QR URL hashes."
+}

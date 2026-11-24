@@ -1,0 +1,107 @@
+<!doctype html>
+<!-- QR Pocket Console | Copyright (c) 2026 NazreenNasyuha | MIT License -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#11121c">
+<link rel="manifest" href="./manifest.json">
+<title>QR Pocket Console</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:#141622;color:#cdd6f4;font-family:monospace;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.con{width:min(96vw,360px);background:linear-gradient(165deg,#2b2e45,#151724);border:1px solid #2e3148;border-radius:26px;padding:14px;box-shadow:0 22px 50px #000}
+.bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px;font-weight:700}
+.bar .sc{background:#11121c;border:1px solid #2e3148;padding:3px 8px;border-radius:6px;color:#f9e2af}
+.bar button{background:#25273b;color:#cdd6f4;border:1px solid #45475a;border-radius:7px;padding:4px 8px;font:700 11px monospace;cursor:pointer}
+.lcd{background:#0e1019;padding:8px;border-radius:14px;border:1px solid #25273b;margin-bottom:14px}
+canvas{display:block;width:100%;aspect-ratio:160/200;max-height:52vh;margin:auto;background:#11121c;border-radius:6px;image-rendering:pixelated;image-rendering:crisp-edges}
+.ctl{display:flex;align-items:center;justify-content:space-between;padding:2px 6px}
+.dp{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px}
+.dp button{background:#2d3047;color:#cdd6f4;border:1px solid #45475a;border-radius:10px;font:700 16px monospace;box-shadow:0 4px 0 #10121d;touch-action:none}
+.dp button:active,.dp button.on{transform:translateY(3px);box-shadow:0 1px 0 #10121d;border-color:#89dceb}
+.ab{display:flex;gap:14px;align-items:center}
+.ab button{width:56px;height:56px;border-radius:50%;border:1px solid rgba(255,255,255,.25);font:700 16px monospace;color:#11121c;touch-action:none}
+.ab .a{background:#f38ba8;box-shadow:0 5px 0 #7b2d46;transform:translateY(-14px)}
+.ab .b{background:#fab387;box-shadow:0 5px 0 #7d4425;transform:translateY(14px)}
+.ab .a:active,.ab .a.on{transform:translateY(-10px);box-shadow:0 1px 0 #7b2d46}
+.ab .b:active,.ab .b.on{transform:translateY(18px);box-shadow:0 1px 0 #7d4425}
+</style>
+</head>
+<body>
+<div class="con">
+  <div class="bar">
+    <span style="color:#a6e3a1">● QR-POCKET</span>
+    <span class="sc">SC <span id="sc">0</span></span>
+    <div>
+      <button id="mt">🔊</button>
+      <button id="rs">RST</button>
+    </div>
+  </div>
+  <div class="lcd"><canvas id="cv" width="160" height="200"></canvas></div>
+  <div class="ctl">
+    <div class="dp">
+      <div></div><button data-k="u">▲</button><div></div>
+      <button data-k="l">◀</button><div></div><button data-k="r">▶</button>
+      <div></div><button data-k="d">▼</button><div></div>
+    </div>
+    <div class="ab">
+      <button class="b" data-k="b">B</button>
+      <button class="a" data-k="a">A</button>
+    </div>
+  </div>
+</div>
+<script>
+(()=>{
+const cv=document.getElementById('cv'),c=cv.getContext('2d'),scEl=document.getElementById('sc'),
+pal=['#11121c','#1c1f30','#45475a','#e6edf7','#f38ba8','#fab387','#f9e2af','#a6e3a1','#89dceb','#89b4fa','#cba6f7','#f5c2e7','#5eead4','#ff6b81','#38bdf8','#313244'],
+k={u:0,d:0,l:0,r:0,a:0,b:0},p={u:0,d:0,l:0,r:0,a:0,b:0};
+let ac,mu=0,lp,rf,fr=0,acc=0,lt=0,sc=0,ov=0,om='',ol=0,cur='';
+const au=()=>{if(mu)return;try{if(!ac)ac=new(AudioContext||webkitAudioContext)();if(ac.state=='suspended')ac.resume()}catch(e){}return ac};
+const G={c,W:160,H:200,pal,k,p,
+cls(cl=0){G.r(0,0,160,200,cl)},
+r(x,y,w,h,cl){c.fillStyle=typeof cl=='number'?pal[cl]||pal[3]:cl;c.fillRect(x|0,y|0,w|0,h|0)},
+t(s,x,y,cl=3,sz=8){c.fillStyle=typeof cl=='number'?pal[cl]||pal[3]:cl;c.font='bold '+(sz||8)+'px monospace';c.textBaseline='top';c.fillText(String(s),x|0,y|0)},
+snd(f,d=.06,tp='square'){if(mu||!f)return;let a=au();if(!a)return;try{let n=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=tp||'square';o.frequency.setValueAtTime(f,n);g.gain.setValueAtTime(.065,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g);g.connect(a.destination);o.start(n);o.stop(n+d+.01)}catch(e){}},
+sc(n){sc=n|0;scEl.textContent=sc},
+ov(m='GAME OVER'){if(ov)return;ov=1;om=String(m||'GAME OVER');ol=12;G.snd(150,.22,'sawtooth')},
+loop(fn){lp=fn}};
+const clrP=()=>{p.u=p.d=p.l=p.r=p.a=p.b=0};
+const drawOv=()=>{c.fillStyle='rgba(17,18,28,.84)';c.fillRect(10,60,140,80);G.r(10,60,140,2,4);G.r(10,138,140,2,4);
+G.t('GAME OVER',40,70,4,12);if(om&&om!='GAME OVER')G.t(om.slice(0,24),Math.max(14,(160-om.length*5)>>1),88,6,8);
+G.t('SCORE: '+sc,44,104,3,8);if(ol<=0&&((fr>>3)&1))G.t('A / B TO REBOOT',32,122,7,8)};
+const tick=ts=>{if(!lt)lt=ts;acc+=Math.min(ts-lt,100);lt=ts;let n=0;
+while(acc>=1000/30&&n<2){acc-=1000/30;n++;
+if(ov){if(ol>0)ol--;else if(p.a||p.b){clrP();boot(cur);return}drawOv()}
+else if(lp){try{lp(fr)}catch(e){cancelAnimationFrame(rf);G.cls(0);G.t('CART ERR',44,86,4,12);return}}
+fr++;clrP()}rf=requestAnimationFrame(tick)};
+const boot=code=>{cancelAnimationFrame(rf);cur=code;fr=acc=lt=ov=ol=0;om='';lp=null;
+for(let i in k)k[i]=p[i]=0;G.sc(0);G.cls(0);
+try{new Function('G',code)(G);rf=requestAnimationFrame(tick)}catch(e){G.t('CART ERROR',34,82,4,12)}};
+const dec=async h=>{const MAX=32768;if(h.startsWith('#d.')){let s=h.slice(3).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';
+let b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+let ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(u);w.close();
+let rd=ds.readable.getReader(),ch=[],n=0;while(1){let{value:v,done:d}=await rd.read();if(d)break;n+=v.byteLength;if(n>MAX){await rd.cancel();throw Error('TOO BIG')}ch.push(v)}
+let o=new Uint8Array(n),k=0;for(let v of ch){o.set(v,k);k+=v.byteLength}return new TextDecoder().decode(o)}
+if(h.startsWith('#r.')){let t=decodeURIComponent(h.slice(3));if(new TextEncoder().encode(t).length>MAX)throw Error('TOO BIG');return t}return ''};
+const load=async()=>{let h=location.hash;if(!h){cancelAnimationFrame(rf);G.cls(0);
+G.t('QR POCKET',36,52,8,14);G.t('OFFLINE READY',32,82,7,10);G.t('SCAN ANY PRINTED',22,114,3,8);G.t('QR GAME CARTRIDGE',18,128,6,8);return}
+try{boot(await dec(h))}catch(e){G.cls(0);G.t('BAD QR HASH',30,88,4,12)}};
+const set=(btn,dn)=>{if(!(btn in k))return;if(dn){au();if(!k[btn])p[btn]=1;k[btn]=1}else k[btn]=0};
+document.querySelectorAll('[data-k]').forEach(el=>{let b=el.dataset.k;
+el.addEventListener('pointerdown',e=>{e.preventDefault();if(el.setPointerCapture)try{el.setPointerCapture(e.pointerId)}catch(_){}el.classList.add('on');set(b,1)});
+const off=()=>{el.classList.remove('on');set(b,0)};
+el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off)});
+addEventListener('blur',()=>{for(let i in k)k[i]=p[i]=0});
+const km={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d',KeyZ:'a',Space:'a',Enter:'a',KeyX:'b',ShiftLeft:'b',ShiftRight:'b'};
+addEventListener('keydown',e=>{if(e.code=='KeyR')return cur&&boot(cur);let b=km[e.code];if(b){e.preventDefault();set(b,1)}});
+addEventListener('keyup',e=>{let b=km[e.code];if(b)set(b,0)});
+document.getElementById('mt').onclick=e=>{mu^=1;e.target.textContent=mu?'🔇':'🔊';if(!mu)G.snd(660,.05,'triangle')};
+document.getElementById('rs').onclick=()=>cur&&boot(cur);
+addEventListener('hashchange',load);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+load();
+})();
+</script>
+</body>
+</html>
