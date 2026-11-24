@@ -35,8 +35,6 @@ Once GitHub Pages is enabled on `main` (`/` root):
 
 ---
 
-## Security & Architecture Documentation
+## License
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Full system architecture, Mermaid diagrams, `G`-BIOS API spec, and security threat model.
-- **[AGENTS.md](AGENTS.md)** — Repository engineering standards, invariants, and safety guardrails.
-- **[LICENSE](LICENSE)** — MIT License (`Copyright (c) 2026 NazreenNasyuha`).
+Licensed under the [MIT License](LICENSE) — **Copyright (c) 2026 NazreenNasyuha**.

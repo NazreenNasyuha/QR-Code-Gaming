@@ -3,6 +3,12 @@
 # Copyright (c) 2026 NazreenNasyuha | MIT License
 # =============================================================================
 
+# --- Local Agent & Internal Architecture Docs (Not Deployed to GitHub) ---
+AGENTS.md
+AGENTS.MD
+ARCHITECTURE.md
+ARCHITECTURE.MD
+
 # --- Secrets, Credentials & Environment Files ---
 .env
 .env.*

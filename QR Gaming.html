@@ -252,7 +252,6 @@
       .no-print,
       header,
       #tab-bay,
-      #tab-deploy,
       #studio-toast {
         display: none !important;
       }
@@ -284,7 +283,7 @@
 </head>
 <body class="min-h-screen flex flex-col selection:bg-cyan-400/25 selection:text-white">
 
-  <!-- ==================== STUDIO HEADER & 3 TABS ==================== -->
+  <!-- ==================== STUDIO HEADER & 2 TABS ==================== -->
   <header class="no-print sticky top-0 z-30 border-b border-studioBorder/90 bg-studioBg/92 backdrop-blur-md">
     <div class="max-w-6xl mx-auto px-3 sm:px-5 py-2.5">
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -323,8 +322,8 @@
         </div>
       </div>
 
-      <!-- 3 Main Studio Tabs -->
-      <nav class="grid grid-cols-3 gap-1.5 mt-2.5" role="tablist" aria-label="Studio Workspace Tabs">
+      <!-- 2 Main Studio Tabs -->
+      <nav class="grid grid-cols-2 gap-1.5 mt-2.5" role="tablist" aria-label="Studio Workspace Tabs">
         <button type="button" data-tab="bay" role="tab" aria-selected="true"
           class="nav-tab is-active flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-studioBorder bg-studioCard/80 text-xs sm:text-sm font-semibold text-studioText/85 hover:text-white transition">
           <svg class="w-4 h-4 shrink-0 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -345,16 +344,6 @@
             <rect x="6" y="14" width="12" height="8"></rect>
           </svg>
           <span class="truncate">Printable QR Sheet</span>
-        </button>
-
-        <button type="button" data-tab="deploy" role="tab" aria-selected="false"
-          class="nav-tab flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl border border-studioBorder bg-studioCard/80 text-xs sm:text-sm font-semibold text-studioText/85 hover:text-white transition">
-          <svg class="w-4 h-4 shrink-0 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span class="truncate">Offline PWA Deploy</span>
         </button>
       </nav>
     </div>
@@ -647,49 +636,6 @@
       <div id="print-sheet-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
 
-    <!-- ================================================================ -->
-    <!-- TAB 3: OFFLINE PWA SHELL DEPLOY                                  -->
-    <!-- ================================================================ -->
-    <section id="tab-deploy" class="hidden space-y-5">
-      <div class="studio-panel rounded-2xl p-5">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <div>
-            <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-400/15 border border-emerald-400/40 font-mono text-[11px] font-bold text-emerald-300 mb-1.5">
-              METHOD 3 • ZERO-GAME-CODE CACHED SHELL
-            </span>
-            <h2 class="font-pixel text-sm sm:text-base text-white">3-STEP GITHUB PAGES OFFLINE DEPLOY</h2>
-          </div>
-          <span id="pwa-shell-size-pill" class="px-3 py-1 rounded-xl bg-studioDeep border border-studioBorder font-mono text-xs text-cyan-300 font-bold">
-            Shell Size: -- KB
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
-            <div class="font-pixel text-xs text-emerald-300 mb-1.5">1. HOST 3 TINY FILES</div>
-            <p class="text-xs text-studioText/85 leading-relaxed">
-              Download <code class="font-mono text-amber-200">index.html</code>, <code class="font-mono text-amber-200">sw.js</code>, and <code class="font-mono text-amber-200">manifest.json</code> below and push them to a free GitHub Pages repository (e.g. <code class="font-mono text-cyan-300">QR-Code-Gaming</code>).
-            </p>
-          </div>
-          <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
-            <div class="font-pixel text-xs text-cyan-300 mb-1.5">2. PRINT YOUR 6 CARDS</div>
-            <p class="text-xs text-studioText/85 leading-relaxed">
-              Paste your live HTTPS GitHub Pages URL into the <strong>Base Offline PWA URL</strong> box in Tab 1, then open Tab 2 and print the 2×3 Cartridge Sheet.
-            </p>
-          </div>
-          <div class="rounded-xl bg-studioDeep/85 border border-studioBorder p-3.5">
-            <div class="font-pixel text-xs text-purple-300 mb-1.5">3. SCAN ONCE, PLAY OFFLINE</div>
-            <p class="text-xs text-studioText/85 leading-relaxed">
-              Scan any QR cartridge once with your phone camera so <code class="font-mono text-emerald-300">sw.js</code> caches the tiny BIOS shell. Switch on <strong>Airplane Mode</strong>—all 6 printed QR cartridges now launch in 1 tap offline!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Downloadable & Copyable Files -->
-      <div id="pwa-files-list" class="space-y-4"></div>
-    </section>
-
   </main>
 
   <!-- ==================== STUDIO FOOTER ==================== -->
@@ -763,26 +709,9 @@
         return false;
       }
 
-      function downloadFile(filename, content, mime = 'text/plain;charset=utf-8') {
-        try {
-          const blob = new Blob([content], { type: mime });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          showToast(`Downloaded ${filename}`, 'emerald');
-        } catch (_) {
-          showToast(`Download blocked in sandbox for ${filename}`, 'amber');
-        }
-      }
-
       /* =====================================================================
          2. UNIFIED 16-COLOR MICRO-CONSOLE BIOS (`G`) — 160×200 @ 30 FPS
-            Exact 1:1 parity with exported standalone Offline PWA index.html
+            Exact 1:1 parity with standalone Offline PWA index.html
       ===================================================================== */
       const PALETTE = [
         '#11121c', // 0: deep midnight background
@@ -1359,156 +1288,7 @@ G.loop(f=>{
       ];
 
       /* =====================================================================
-         5. EXPORTABLE OFFLINE PWA SHELL FILES (EXACT 16-COLOR G-BIOS PARITY)
-      ===================================================================== */
-      const PWA_INDEX_HTML = `<!doctype html>
-<!-- QR Pocket Console | Copyright (c) 2026 NazreenNasyuha | MIT License -->
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#11121c">
-<link rel="manifest" href="./manifest.json">
-<title>QR Pocket Console</title>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{margin:0;height:100%;background:#141622;color:#cdd6f4;font-family:monospace;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.con{width:min(96vw,360px);background:linear-gradient(165deg,#2b2e45,#151724);border:1px solid #2e3148;border-radius:26px;padding:14px;box-shadow:0 22px 50px #000}
-.bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px;font-weight:700}
-.bar .sc{background:#11121c;border:1px solid #2e3148;padding:3px 8px;border-radius:6px;color:#f9e2af}
-.bar button{background:#25273b;color:#cdd6f4;border:1px solid #45475a;border-radius:7px;padding:4px 8px;font:700 11px monospace;cursor:pointer}
-.lcd{background:#0e1019;padding:8px;border-radius:14px;border:1px solid #25273b;margin-bottom:14px}
-canvas{display:block;width:100%;aspect-ratio:160/200;max-height:52vh;margin:auto;background:#11121c;border-radius:6px;image-rendering:pixelated;image-rendering:crisp-edges}
-.ctl{display:flex;align-items:center;justify-content:space-between;padding:2px 6px}
-.dp{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px}
-.dp button{background:#2d3047;color:#cdd6f4;border:1px solid #45475a;border-radius:10px;font:700 16px monospace;box-shadow:0 4px 0 #10121d;touch-action:none}
-.dp button:active,.dp button.on{transform:translateY(3px);box-shadow:0 1px 0 #10121d;border-color:#89dceb}
-.ab{display:flex;gap:14px;align-items:center}
-.ab button{width:56px;height:56px;border-radius:50%;border:1px solid rgba(255,255,255,.25);font:700 16px monospace;color:#11121c;touch-action:none}
-.ab .a{background:#f38ba8;box-shadow:0 5px 0 #7b2d46;transform:translateY(-14px)}
-.ab .b{background:#fab387;box-shadow:0 5px 0 #7d4425;transform:translateY(14px)}
-.ab .a:active,.ab .a.on{transform:translateY(-10px);box-shadow:0 1px 0 #7b2d46}
-.ab .b:active,.ab .b.on{transform:translateY(18px);box-shadow:0 1px 0 #7d4425}
-</style>
-</head>
-<body>
-<div class="con">
-  <div class="bar">
-    <span style="color:#a6e3a1">● QR-POCKET</span>
-    <span class="sc">SC <span id="sc">0</span></span>
-    <div>
-      <button id="mt">🔊</button>
-      <button id="rs">RST</button>
-    </div>
-  </div>
-  <div class="lcd"><canvas id="cv" width="160" height="200"></canvas></div>
-  <div class="ctl">
-    <div class="dp">
-      <div></div><button data-k="u">▲</button><div></div>
-      <button data-k="l">◀</button><div></div><button data-k="r">▶</button>
-      <div></div><button data-k="d">▼</button><div></div>
-    </div>
-    <div class="ab">
-      <button class="b" data-k="b">B</button>
-      <button class="a" data-k="a">A</button>
-    </div>
-  </div>
-</div>
-<script>
-(()=>{
-const cv=document.getElementById('cv'),c=cv.getContext('2d'),scEl=document.getElementById('sc'),
-pal=['#11121c','#1c1f30','#45475a','#e6edf7','#f38ba8','#fab387','#f9e2af','#a6e3a1','#89dceb','#89b4fa','#cba6f7','#f5c2e7','#5eead4','#ff6b81','#38bdf8','#313244'],
-k={u:0,d:0,l:0,r:0,a:0,b:0},p={u:0,d:0,l:0,r:0,a:0,b:0};
-let ac,mu=0,lp,rf,fr=0,acc=0,lt=0,sc=0,ov=0,om='',ol=0,cur='';
-const au=()=>{if(mu)return;try{if(!ac)ac=new(AudioContext||webkitAudioContext)();if(ac.state=='suspended')ac.resume()}catch(e){}return ac};
-const G={c,W:160,H:200,pal,k,p,
-cls(cl=0){G.r(0,0,160,200,cl)},
-r(x,y,w,h,cl){c.fillStyle=typeof cl=='number'?pal[cl]||pal[3]:cl;c.fillRect(x|0,y|0,w|0,h|0)},
-t(s,x,y,cl=3,sz=8){c.fillStyle=typeof cl=='number'?pal[cl]||pal[3]:cl;c.font='bold '+(sz||8)+'px monospace';c.textBaseline='top';c.fillText(String(s),x|0,y|0)},
-snd(f,d=.06,tp='square'){if(mu||!f)return;let a=au();if(!a)return;try{let n=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=tp||'square';o.frequency.setValueAtTime(f,n);g.gain.setValueAtTime(.065,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g);g.connect(a.destination);o.start(n);o.stop(n+d+.01)}catch(e){}},
-sc(n){sc=n|0;scEl.textContent=sc},
-ov(m='GAME OVER'){if(ov)return;ov=1;om=String(m||'GAME OVER');ol=12;G.snd(150,.22,'sawtooth')},
-loop(fn){lp=fn}};
-const clrP=()=>{p.u=p.d=p.l=p.r=p.a=p.b=0};
-const drawOv=()=>{c.fillStyle='rgba(17,18,28,.84)';c.fillRect(10,60,140,80);G.r(10,60,140,2,4);G.r(10,138,140,2,4);
-G.t('GAME OVER',40,70,4,12);if(om&&om!='GAME OVER')G.t(om.slice(0,24),Math.max(14,(160-om.length*5)>>1),88,6,8);
-G.t('SCORE: '+sc,44,104,3,8);if(ol<=0&&((fr>>3)&1))G.t('A / B TO REBOOT',32,122,7,8)};
-const tick=ts=>{if(!lt)lt=ts;acc+=Math.min(ts-lt,100);lt=ts;let n=0;
-while(acc>=1000/30&&n<2){acc-=1000/30;n++;
-if(ov){if(ol>0)ol--;else if(p.a||p.b){clrP();boot(cur);return}drawOv()}
-else if(lp){try{lp(fr)}catch(e){cancelAnimationFrame(rf);G.cls(0);G.t('CART ERR',44,86,4,12);return}}
-fr++;clrP()}rf=requestAnimationFrame(tick)};
-const boot=code=>{cancelAnimationFrame(rf);cur=code;fr=acc=lt=ov=ol=0;om='';lp=null;
-for(let i in k)k[i]=p[i]=0;G.sc(0);G.cls(0);
-try{new Function('G',code)(G);rf=requestAnimationFrame(tick)}catch(e){G.t('CART ERROR',34,82,4,12)}};
-const dec=async h=>{const MAX=32768;if(h.startsWith('#d.')){let s=h.slice(3).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';
-let b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
-let ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(u);w.close();
-let rd=ds.readable.getReader(),ch=[],n=0;while(1){let{value:v,done:d}=await rd.read();if(d)break;n+=v.byteLength;if(n>MAX){await rd.cancel();throw Error('TOO BIG')}ch.push(v)}
-let o=new Uint8Array(n),k=0;for(let v of ch){o.set(v,k);k+=v.byteLength}return new TextDecoder().decode(o)}
-if(h.startsWith('#r.')){let t=decodeURIComponent(h.slice(3));if(new TextEncoder().encode(t).length>MAX)throw Error('TOO BIG');return t}return ''};
-const load=async()=>{let h=location.hash;if(!h){cancelAnimationFrame(rf);G.cls(0);
-G.t('QR POCKET',36,52,8,14);G.t('OFFLINE READY',32,82,7,10);G.t('SCAN ANY PRINTED',22,114,3,8);G.t('QR GAME CARTRIDGE',18,128,6,8);return}
-try{boot(await dec(h))}catch(e){G.cls(0);G.t('BAD QR HASH',30,88,4,12)}};
-const set=(btn,dn)=>{if(!(btn in k))return;if(dn){au();if(!k[btn])p[btn]=1;k[btn]=1}else k[btn]=0};
-document.querySelectorAll('[data-k]').forEach(el=>{let b=el.dataset.k;
-el.addEventListener('pointerdown',e=>{e.preventDefault();if(el.setPointerCapture)try{el.setPointerCapture(e.pointerId)}catch(_){}el.classList.add('on');set(b,1)});
-const off=()=>{el.classList.remove('on');set(b,0)};
-el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off)});
-addEventListener('blur',()=>{for(let i in k)k[i]=p[i]=0});
-const km={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d',KeyZ:'a',Space:'a',Enter:'a',KeyX:'b',ShiftLeft:'b',ShiftRight:'b'};
-addEventListener('keydown',e=>{if(e.code=='KeyR')return cur&&boot(cur);let b=km[e.code];if(b){e.preventDefault();set(b,1)}});
-addEventListener('keyup',e=>{let b=km[e.code];if(b)set(b,0)});
-document.getElementById('mt').onclick=e=>{mu^=1;e.target.textContent=mu?'🔇':'🔊';if(!mu)G.snd(660,.05,'triangle')};
-document.getElementById('rs').onclick=()=>cur&&boot(cur);
-addEventListener('hashchange',load);
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-load();
-})();
-<\/script>
-</body>
-</html>`;
-
-      const PWA_SW_JS = `/* QR Pocket Console Service Worker | Copyright (c) 2026 NazreenNasyuha | MIT License */
-const CACHE = 'qr-pocket-6game-v1';
-const ASSETS = ['./', './index.html', './manifest.json'];
-
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then((cached) => {
-      if (cached) return cached;
-      return fetch(e.request).catch(() => caches.match('./index.html'));
-    })
-  );
-});`;
-
-      const PWA_MANIFEST_JSON = `{
-  "name": "QR Pocket Console",
-  "short_name": "QR Pocket",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#141622",
-  "theme_color": "#11121c",
-  "description": "Zero-game-code Offline PWA micro-console shell that boots games stored inside QR URL hashes."
-}`;
-
-      /* =====================================================================
-         6. STUDIO STATE, QR RENDERING & TELEMETRY
+         5. STUDIO STATE, QR RENDERING & TELEMETRY
       ===================================================================== */
       const cartridges = CARTRIDGE_CATALOG.map((c) => ({
         ...c,
@@ -1821,76 +1601,13 @@ self.addEventListener('fetch', (e) => {
         });
       }
 
-      function renderPWADeployTab() {
-        const container = document.getElementById('pwa-files-list');
-        const enc = new TextEncoder();
-        const shellBytes = enc.encode(PWA_INDEX_HTML).length;
-        document.getElementById('pwa-shell-size-pill').textContent = `index.html Shell: ${(shellBytes / 1024).toFixed(2)} KB (${shellBytes} B)`;
-
-        const files = [
-          {
-            name: 'index.html',
-            desc: 'Zero-Game-Code Offline Handheld + 16-Color G-BIOS + #d. Decompressor',
-            mime: 'text/html;charset=utf-8',
-            color: 'text-cyan-300',
-            content: PWA_INDEX_HTML
-          },
-          {
-            name: 'sw.js',
-            desc: 'Cache-First Service Worker (caches console shell for permanent offline play)',
-            mime: 'application/javascript;charset=utf-8',
-            color: 'text-emerald-300',
-            content: PWA_SW_JS
-          },
-          {
-            name: 'manifest.json',
-            desc: 'Installable PWA Web App Manifest',
-            mime: 'application/json;charset=utf-8',
-            color: 'text-purple-300',
-            content: PWA_MANIFEST_JSON
-          }
-        ];
-
-        container.innerHTML = '';
-        files.forEach((f) => {
-          const bytes = enc.encode(f.content).length;
-          const card = document.createElement('div');
-          card.className = 'studio-panel rounded-2xl overflow-hidden';
-
-          card.innerHTML = `
-            <div class="px-4 py-3 bg-studioDeep/80 border-b border-studioBorder flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span class="font-mono font-bold text-sm ${f.color}">${f.name}</span>
-                <span class="text-[11px] text-studioMuted hidden sm:inline truncate">${f.desc}</span>
-                <span class="px-2 py-0.5 rounded bg-studioCard font-mono text-[10px] text-amber-200 shrink-0">${bytes} B</span>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <button type="button" class="btn-copy-file studio-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-studioText hover:border-cyan-300/60">
-                  ⧉ Copy
-                </button>
-                <button type="button" class="btn-dl-file studio-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-300 hover:border-emerald-300/60">
-                  ⬇ Download
-                </button>
-              </div>
-            </div>
-            <pre class="p-3.5 bg-studioDeep/60 overflow-x-auto max-h-56 text-[11px] font-mono leading-relaxed text-studioText/85 m-0"><code></code></pre>
-          `;
-
-          card.querySelector('code').textContent = f.content;
-          card.querySelector('.btn-copy-file').addEventListener('click', () => copyToClipboard(f.content, `Copied ${f.name}!`));
-          card.querySelector('.btn-dl-file').addEventListener('click', () => downloadFile(f.name, f.content, f.mime));
-          container.appendChild(card);
-        });
-      }
-
       /* =====================================================================
-         9. EVENT BINDINGS: TABS, POINTER-CAPTURED TOUCH PAD, KEYBOARD, EDITOR
+         8. EVENT BINDINGS: TABS, POINTER-CAPTURED TOUCH PAD, KEYBOARD, EDITOR
       ===================================================================== */
       function setupTabs() {
         const tabs = {
           bay: document.getElementById('tab-bay'),
-          print: document.getElementById('tab-print'),
-          deploy: document.getElementById('tab-deploy')
+          print: document.getElementById('tab-print')
         };
         const navBtns = document.querySelectorAll('.nav-tab');
 
@@ -2089,7 +1806,6 @@ self.addEventListener('fetch', (e) => {
         setupTabs();
         setupHandheldControls();
         setupStudioControls();
-        renderPWADeployTab();
 
         await recomputeAll();
 
